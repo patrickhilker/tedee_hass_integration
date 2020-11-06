@@ -18,7 +18,7 @@ lock:
 
 After restart of Homeassistant you should see the lock:
 
-![Image of Tede Lock Entity](https://github.com/joerg65/tedee_lock/images/Lock_Entity.png)
+![Image of Tede Lock Entity](images/Lock_Entity.png)
 
 Here is how I made a horizontal-stack with two custom button-cards:
 
@@ -59,4 +59,4 @@ cards:
       service_data:
         entity_id: lock.lock_326b
 ```
-![Image of Tede Lock with button-cards](https://github.com/joerg65/tedee_lock/images/Lock_Entity.png)
+![Image of Tede Lock with button-cards](images/Lock_Entity.png)
