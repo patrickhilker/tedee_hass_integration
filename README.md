@@ -6,9 +6,9 @@ In my other repository you will find the Python module, that also needs to be in
 
 [pytedee](https://github.com/joerg65/pytedee)
 
-To install this component, the files in this repository must be copied to `<config/custom_components/tedee_lock>`.
+To install this component, the files in this repository must be copied to `config/custom_components/tedee_lock`.
 
-Put this lines int the configuration:
+Put this lines into the configuration:
 ```yaml
 lock:
   - platform: tedee
