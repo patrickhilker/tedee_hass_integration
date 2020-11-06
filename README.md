@@ -59,4 +59,4 @@ cards:
       service_data:
         entity_id: lock.lock_326b
 ```
-![Image of Tede Lock with button-cards](images/Lock_Entity.png)
+![Image of Tede Lock with button-cards](images/Lock_two_button_cards.png)
