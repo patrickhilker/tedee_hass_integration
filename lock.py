@@ -70,7 +70,8 @@ class TedeeLock(LockEntity):
 
     def update(self):
         self._available = self._client.update(self._lock_id)
-        self._battery_level = self._sensor.get_battery_level()
+        #self._battery_level = self._sensor.get_battery_level()
+        self._state = self.decode_state(self._sensor.get_state())
 
     @property
     def name(self):
@@ -87,33 +88,55 @@ class TedeeLock(LockEntity):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         self._device_attrs[ATTR_BATTERY_LEVEL] = self._battery_level
+
         return self._device_attrs
 
     def unlock(self, **kwargs):
         """Unlock the door."""
         try:
             self._client.unlock(self._lock_id)
-            if self._client.is_unlocked(self._lock_id):
-                self._state = STATE_UNLOCKED
         except TedeeClientException:
-            _LOGGER.error("Failed to unlock the door.")
+            _LOGGER.debug("Failed to unlock the door.")
+        else:
+            self._state = self.decode_state(self._sensor.get_state())
+            self.async_write_ha_state()
+            async_call_later(self.hass, 4, self.force_update)
 
     def lock(self, **kwargs):
         """Unlock the door."""
         try:
             self._client.lock(self._lock_id)
-            if self._client.is_locked(self._lock_id):
-                self._state = STATE_LOCKED
         except TedeeClientException:
-            _LOGGER.error("Failed to lock the door.")
-
+            _LOGGER.debug("Failed to lock the door.")
+        else:
+            self._state = self.decode_state(self._sensor.get_state())
+            self.async_write_ha_state()
+            async_call_later(self.hass, 4, self.force_update)
 
     def open(self, **kwargs):
         """Unlatch the door."""
         try:
             self._client.open(self._lock_id)
-            if self._client.is_unlocked(self._lock_id):
-                self._state = STATE_UNLOCKED
         except TedeeClientException:
-            _LOGGER.error("Failed to unlatch the door.")
+            _LOGGER.debug("Failed to unlatch the door.")
+        else:
+            self._state = self.decode_state(self._sensor.get_state())
+            self.async_write_ha_state()
+            async_call_later(self.hass, 8, self.force_update)
+
+    @callback
+    def force_update(self, _):
+        self._state = self.decode_state(self._sensor.get_state())
+        _LOGGER.error("force_update state: %s", self._state)
+        self.async_write_ha_state()
+
+    def decode_state(self, state):
+        if state == 5:
+            return STATE_UNLOCKED
+        elif state == 2:
+            return STATE_UNLOCKED
+        elif state == 6:
+            return STATE_LOCKED
+        else:
+            return None
 
