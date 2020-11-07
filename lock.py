@@ -127,7 +127,7 @@ class TedeeLock(LockEntity):
     @callback
     def force_update(self, _):
         self._state = self.decode_state(self._sensor.get_state())
-        _LOGGER.error("force_update state: %s", self._state)
+        #_LOGGER.error("force_update state: %s", self._state)
         self.async_write_ha_state()
 
     def decode_state(self, state):
