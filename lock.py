@@ -82,7 +82,7 @@ class TedeeLock(LockEntity):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._state == STATE_LOCKED
+        return self.decode_state(self._sensor.get_state())
 
     @property
     def device_state_attributes(self):
@@ -98,9 +98,9 @@ class TedeeLock(LockEntity):
         except TedeeClientException:
             _LOGGER.debug("Failed to unlock the door.")
         else:
-            self._state = self.decode_state(self._sensor.get_state())
-            self.async_write_ha_state()
-            async_call_later(self.hass, 4, self.force_update)
+            #self._state = self.decode_state(self._sensor.get_state())
+            #self.async_write_ha_state()
+            async_call_later(self.hass, 3, self.force_update)
 
     def lock(self, **kwargs):
         """Unlock the door."""
@@ -109,9 +109,9 @@ class TedeeLock(LockEntity):
         except TedeeClientException:
             _LOGGER.debug("Failed to lock the door.")
         else:
-            self._state = self.decode_state(self._sensor.get_state())
-            self.async_write_ha_state()
-            async_call_later(self.hass, 4, self.force_update)
+            #self._state = self.decode_state(self._sensor.get_state())
+            #self.async_write_ha_state()
+            async_call_later(self.hass, 3, self.force_update)
 
     def open(self, **kwargs):
         """Unlatch the door."""
@@ -120,9 +120,9 @@ class TedeeLock(LockEntity):
         except TedeeClientException:
             _LOGGER.debug("Failed to unlatch the door.")
         else:
-            self._state = self.decode_state(self._sensor.get_state())
-            self.async_write_ha_state()
-            async_call_later(self.hass, 8, self.force_update)
+            #self._state = self.decode_state(self._sensor.get_state())
+            #self.async_write_ha_state()
+            async_call_later(self.hass, 5, self.force_update)
 
     @callback
     def force_update(self, _):
@@ -131,12 +131,11 @@ class TedeeLock(LockEntity):
         self.async_write_ha_state()
 
     def decode_state(self, state):
+        #_LOGGER.error("decode_state: %d", state)
         if state == 5:
-            return STATE_UNLOCKED
-        elif state == 2:
-            return STATE_UNLOCKED
+            return True
         elif state == 6:
-            return STATE_LOCKED
+            return True
         else:
-            return None
+            return False
 
