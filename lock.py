@@ -1,4 +1,4 @@
-"""Platform for light integration."""
+"""Platform for lock integration."""
 import logging
 
 from pytedee import TedeeClient
@@ -103,7 +103,7 @@ class TedeeLock(LockEntity):
             async_call_later(self.hass, 3, self.force_update)
 
     def lock(self, **kwargs):
-        """Unlock the door."""
+        """Lock the door."""
         try:
             self._client.lock(self._lock_id)
         except TedeeClientException:
