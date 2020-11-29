@@ -1,10 +1,13 @@
 """Platform for lock integration."""
 import logging
-
+from datetime import timedelta
 from pytedee import TedeeClient
 from pytedee import TedeeClientException
 from pytedee import Lock
 import voluptuous as vol
+
+import pkg_resources
+from pkg_resources import parse_version
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
@@ -13,7 +16,11 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, CONF_PASSWORD, CONF_USERNAME, STATE_LOCKED, STATE_UNLOCKED
 
-UNLOCK_MAINTAIN_TIME = 5
+ATTR_NUMERIC_STATE = "numeric_state"
+ATTR_SUPPORT_PULLSPING = "support_pullspring"
+ATTR_DURATION_PULLSPRING = "duration_pullspring"
+ATTR_CONNECTED = "connected"
+ATTR_CHARGING = "charging"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,11 +64,20 @@ class TedeeLock(LockEntity):
             ATTR_ID: self._lock_id,
             ATTR_BATTERY_LEVEL: self._battery_level
         }
+        if parse_version('0.0.2') <= parse_version(pkg_resources.get_distribution('pytedee').version):
+            self._device_attrs[ATTR_SUPPORT_PULLSPING] = self._sensor.get_is_enabled_pullspring()
+            self._device_attrs[ATTR_DURATION_PULLSPRING] = self._sensor.get_duration_pullspring()
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN
+        if parse_version('0.0.2') <= parse_version(pkg_resources.get_distribution('pytedee').version):
+            if self._sensor.get_is_enabled_pullspring():
+                return SUPPORT_OPEN
+            else:
+                return None
+        else:
+            return SUPPORT_OPEN
 
     @property
     def available(self) -> bool:
@@ -88,7 +104,10 @@ class TedeeLock(LockEntity):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         self._device_attrs[ATTR_BATTERY_LEVEL] = self._battery_level
-
+        self._device_attrs[ATTR_NUMERIC_STATE] = self._sensor.get_state()
+        if parse_version('0.0.2') <= parse_version(pkg_resources.get_distribution('pytedee').version):
+            self._device_attrs[ATTR_CONNECTED] = self._sensor.is_connected()
+            self._device_attrs[ATTR_CHARGING] = self._sensor.get_is_charging()
         return self._device_attrs
 
     def unlock(self, **kwargs):
@@ -127,7 +146,6 @@ class TedeeLock(LockEntity):
     @callback
     def force_update(self, _):
         self._state = self.decode_state(self._sensor.get_state())
-        #_LOGGER.error("force_update state: %s", self._state)
         self.async_write_ha_state()
 
     def decode_state(self, state):
