@@ -12,8 +12,8 @@ Put this lines into the configuration:
 ```yaml
 lock:
   - platform: tedee
-    username: tedee-username
-    password: tedee-password
+    username: !secret tedee_username
+    password: !secret tedee_password
 ```
 
 After restart of Homeassistant you should see the lock:
