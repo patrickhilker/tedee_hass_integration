@@ -86,7 +86,7 @@ class TedeeLock(LockEntity):
 
     def update(self):
         self._available = self._client.update(self._lock_id)
-        #self._battery_level = self._sensor.get_battery_level()
+        self._battery_level = self._sensor.get_battery_level()
         self._state = self.decode_state(self._sensor.get_state())
 
     @property
@@ -146,6 +146,7 @@ class TedeeLock(LockEntity):
     @callback
     def force_update(self, _):
         self._state = self.decode_state(self._sensor.get_state())
+        self._battery_level = self._sensor.get_battery_level()
         self.async_write_ha_state()
 
     def decode_state(self, state):
