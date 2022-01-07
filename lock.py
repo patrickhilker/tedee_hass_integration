@@ -60,13 +60,13 @@ class TedeeLock(LockEntity):
         self._state = STATE_LOCKED
         self._battery_level = tedee_lock.get_battery_level()
         self._available = True
-        self._device_attrs = {
+        self._entity_attrs = {
             ATTR_ID: self._lock_id,
             ATTR_BATTERY_LEVEL: self._battery_level
         }
         if parse_version('0.0.2') <= parse_version(pkg_resources.get_distribution('pytedee').version):
-            self._device_attrs[ATTR_SUPPORT_PULLSPING] = self._sensor.get_is_enabled_pullspring()
-            self._device_attrs[ATTR_DURATION_PULLSPRING] = self._sensor.get_duration_pullspring()
+            self._entity_attrs[ATTR_SUPPORT_PULLSPING] = self._sensor.get_is_enabled_pullspring()
+            self._entity_attrs[ATTR_DURATION_PULLSPRING] = self._sensor.get_duration_pullspring()
 
     @property
     def supported_features(self):
@@ -101,14 +101,14 @@ class TedeeLock(LockEntity):
         return self.decode_state(self._sensor.get_state())
 
     @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        self._device_attrs[ATTR_BATTERY_LEVEL] = self._battery_level
-        self._device_attrs[ATTR_NUMERIC_STATE] = self._sensor.get_state()
+    def entity_state_attributes(self):
+        """Return the entity specific state attributes."""
+        self._entity_attrs[ATTR_BATTERY_LEVEL] = self._battery_level
+        self._entity_attrs[ATTR_NUMERIC_STATE] = self._sensor.get_state()
         if parse_version('0.0.2') <= parse_version(pkg_resources.get_distribution('pytedee').version):
-            self._device_attrs[ATTR_CONNECTED] = self._sensor.is_connected()
-            self._device_attrs[ATTR_CHARGING] = self._sensor.get_is_charging()
-        return self._device_attrs
+            self._entity_attrs[ATTR_CONNECTED] = self._sensor.is_connected()
+            self._entity_attrs[ATTR_CHARGING] = self._sensor.get_is_charging()
+        return self._entity_attrs
 
     def unlock(self, **kwargs):
         """Unlock the door."""
