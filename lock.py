@@ -101,7 +101,7 @@ class TedeeLock(LockEntity):
         return self.decode_state(self._sensor.get_state())
 
     @property
-    def entity_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the entity specific state attributes."""
         self._entity_attrs[ATTR_BATTERY_LEVEL] = self._battery_level
         self._entity_attrs[ATTR_NUMERIC_STATE] = self._sensor.get_state()
