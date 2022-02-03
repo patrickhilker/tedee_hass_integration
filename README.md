@@ -12,9 +12,15 @@ Put this lines into the configuration:
 ```yaml
 lock:
   - platform: tedee
-    username: !secret tedee_username
-    password: !secret tedee_password
+    access_token: !secret tedee_pak
 ```
+
+Please vistit https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key to generate a token for you.
+
+You will need these scopes:
+   - Devices.Read
+   - Lock.Operate
+
 
 After restart of Homeassistant you should see the lock:
 
