@@ -14,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 # Import the device class from the component that you want to support
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, CONF_PASSWORD, CONF_USERNAME, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, CONF_ACCESS_TOKEN, STATE_LOCKED, STATE_UNLOCKED
 
 ATTR_NUMERIC_STATE = "numeric_state"
 ATTR_SUPPORT_PULLSPING = "support_pullspring"
@@ -26,16 +26,15 @@ _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME, default='admin'): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN, default='no access token given'): cv.string,
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tedee Lock platform."""
     try:
-        #_LOGGER.error("Creds: %s, %s", config[CONF_USERNAME], config[CONF_PASSWORD])
-        tedee = TedeeClient(config[CONF_USERNAME], config[CONF_PASSWORD])
+         #_LOGGER.error("Creds: %s, %s", config[CONF_ACCESS_TOKEN])
+        tedee = TedeeClient(config[CONF_ACCESS_TOKEN])
     except TedeeClientException as exc:
         _LOGGER.error(exc)
         return

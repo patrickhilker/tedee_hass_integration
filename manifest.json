@@ -5,6 +5,6 @@
   "documentation": "https://github.com/home-assistant/example-custom-config/tree/master/custom_components/tedee_lock/",
   "dependencies": [],
   "codeowners": [],
-  "requirements": ["pytedee<=0.0.2"],
-  "version": "0.0.1"
+  "requirements": ["pytedee>=0.0.3"],
+  "version": "0.0.3"
 }
