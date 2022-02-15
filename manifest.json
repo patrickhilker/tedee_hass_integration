@@ -2,7 +2,8 @@
 {
   "domain": "tedee",
   "name": "Tedee",
-  "documentation": "https://github.com/home-assistant/example-custom-config/tree/master/custom_components/tedee_lock/",
+  "documentation": "https://github.com/joerg65/tedee_lock",
+  "issue_tracker": "https://github.com/joerg65/tedee_lock/issues"
   "dependencies": [],
   "codeowners": [],
   "requirements": ["pytedee>=0.0.3"],
