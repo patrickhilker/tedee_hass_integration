@@ -1,4 +1,4 @@
-# tedee Custom Component
+# 🤖🔒 tedee Custom Component
 
 Integrate your [tedee smart lock](https://tedee.com/product-info/lock/) into [Home Assistant](https://www.home-assistant.io/).
 
