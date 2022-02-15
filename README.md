@@ -10,7 +10,7 @@ To use the integration you need the tedee bridge connected to your lock.
 
 ## Installation
 
-This custom component can be installed using hacs. You need to add this repository as a custom repository (HACS -> three dots top right -> custom repositories). Add the link to this repository and choose `integration` in the select field. The custom component should display as a new discovered component in hacs and can now be installed. After installation restart Home Assistant.
+This custom component can be installed using HACS. You need to add this repository as a custom repository (HACS -> three dots top right -> custom repositories). Add the link to this repository and choose `integration` in the select field. The custom component should display as a new discovered component in HACS and can now be installed. After installation restart Home Assistant.
 
 ### Setup
 
