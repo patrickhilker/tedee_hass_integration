@@ -4,7 +4,7 @@ Integrate your [tedee smart lock](https://tedee.com/product-info/lock/) into [Ho
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-This component gives very basic access to your tedee smart lock. Right now it supports to lock and unlock your tedee, but cannot display the current state.
+This component gives very basic access to your tedee smart lock. Right now it supports to lock and unlock your tedee.
 
 To use the integration you need the [tedee bridge](https://tedee.com/product-info/bridge/) connected to your lock.
 
