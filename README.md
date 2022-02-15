@@ -1,28 +1,36 @@
-# tedee_lock
-Homeassistant Custom Component
+# tedee Custom Component
 
-This component gives access to a Tedee doorlock. It needs also the Tedee Bridge present and connected to the doorlock.
-In my other repository you will find the Python module, that also needs to be installed.
+Integrate your tedee smart lock into Home Assistant
 
-[pytedee](https://github.com/joerg65/pytedee)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-To install this component, the files in this repository must be copied to `config/custom_components/tedee_lock`.
+This component gives access to your tedee smart lock. To use the integration you need the tedee bridge connected to your lock.
 
-Put this lines into the configuration:
+## Installation
+
+This custom component can be installed using hacs. You need to add this repository as a custom repository (HACS -> three dots top right -> custom repositories). Add the link to this repository and choose `integration` in the select field. The custom component should display as a new discovered component in hacs and can now be installed. After installation restart Home Assistant.
+
+### Setup
+
+Put these lines into your `configuration.yaml`:
+
 ```yaml
 lock:
   - platform: tedee
-    access_token: !secret tedee_pak
+    access_token: your-tedee-pak
 ```
 
-Please vistit https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key to generate a token for you.
+See the tedee api docs to learn how to [create a personal access key](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key).
 
 You will need these scopes:
-   - Devices.Read
-   - Lock.Operate
+
+   - Devices - Read
+   - Operate - Lock
 
 
-After restart of Homeassistant you should see the lock:
+Restart Home Assistant again. After this you should see your lock as a new entity (`lock.name_of_your_lock`) in Home Assistant.
+
+## Usage examples
 
 ![Image of Tede Lock Entity](images/Lock_Entity.png)
 
