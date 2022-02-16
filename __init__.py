@@ -1,0 +1,1 @@
+"""tedee smart lock integration"""
