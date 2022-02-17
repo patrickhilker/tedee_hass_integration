@@ -1,0 +1,7 @@
+{
+  "name": "Tedee",
+  "content_in_root": true,
+  "zip_release": false,
+  "render_readme": true,
+  "domains": ["lock"]
+}
