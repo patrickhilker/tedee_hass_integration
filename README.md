@@ -1,28 +1,51 @@
-# tedee_lock
-Homeassistant Custom Component
+# 🤖🔒 tedee Custom Component
 
-This component gives access to a Tedee doorlock. It needs also the Tedee Bridge present and connected to the doorlock.
-In my other repository you will find the Python module, that also needs to be installed.
+Integrate your [tedee smart lock](https://tedee.com/product-info/lock/) into [Home Assistant](https://www.home-assistant.io/).
 
-[pytedee](https://github.com/joerg65/pytedee)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-To install this component, the files in this repository must be copied to `config/custom_components/tedee_lock`.
+This component gives very basic access to your tedee smart lock. Right now it supports to lock and unlock your tedee.
 
-Put this lines into the configuration:
+To use the integration you need the [tedee bridge](https://tedee.com/product-info/bridge/) connected to your lock.
+
+## Installation
+
+This custom component can be installed using [HACS](https://hacs.xyz/).
+
+- Make sure you have [HACS installed](https://hacs.xyz/docs/setup/prerequisites)
+- Add a new custom repository to HACS (Home Assistant - left menu - HACS - three dots top right - custom repositories)
+- Insert the link to this repository in the textfield
+- Choose `integration` in the select field
+- Click the add button
+- The custom component should now display as a new discovered component in HACS
+- Install it like every other HACS custom component
+- Restart Home Assistant
+
+### Setup
+
+#### Create personal access key
+
+See the tedee api docs to learn how to [create a personal access key](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key).
+
+You will need these scopes:
+
+   - Devices - Read
+   - Operate - Lock
+
+#### Configuration
+
+Copy these lines into your `configuration.yaml` and replace `your-tedee-pak` with your personal access key:
+
 ```yaml
 lock:
   - platform: tedee
-    access_token: !secret tedee_pak
+    access_token: your-tedee-pak
 ```
 
-Please vistit https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key to generate a token for you.
 
-You will need these scopes:
-   - Devices.Read
-   - Lock.Operate
+Restart Home Assistant again. After this you should see your lock as a new entity (`lock.name_of_your_lock`) in Home Assistant.
 
-
-After restart of Homeassistant you should see the lock:
+## Usage examples
 
 ![Image of Tede Lock Entity](images/Lock_Entity.png)
 
