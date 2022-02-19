@@ -109,6 +109,10 @@ class TedeeLock(LockEntity):
             self._entity_attrs[ATTR_CHARGING] = self._sensor.get_is_charging()
         return self._entity_attrs
 
+    @property
+    def unique_id(self):
+        return self._lock_id
+    
     def unlock(self, **kwargs):
         """Unlock the door."""
         try:
