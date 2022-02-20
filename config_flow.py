@@ -5,7 +5,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 DOMAIN = "tedee"
 
-class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TedeeConfigFlow(self, domain=DOMAIN):
     
     VERSION = 1
     
