@@ -1,6 +1,6 @@
 {
   "name": "Tedee",
-  "zip_release": true,
   "render_readme": true,
-  "domains": ["lock"]
+  "domains": ["lock"],
+  "hide_default_branch": true
 }
