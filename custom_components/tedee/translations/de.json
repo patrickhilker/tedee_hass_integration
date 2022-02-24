@@ -1,0 +1,17 @@
+{
+    "config": {
+        "title": "tedee",
+        "step": {
+            "user": {
+                "title": "tedee einrichten",
+                "description": "[Doku: Personal Access Key erstellen](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Bedienen - Schloss  \n- Geräte - Lesen",
+                "data": {
+                    "access_token": "Personal Access Key"
+                }
+            }
+        },
+        "error": {
+            "auth": "Etwas hat nicht geklappt."
+        }
+    }
+}

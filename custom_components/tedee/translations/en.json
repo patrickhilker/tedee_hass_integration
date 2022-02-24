@@ -1,0 +1,17 @@
+{
+    "config": {
+        "title": "tedee",
+        "step": {
+            "user": {
+                "title": "Setup your tedee",
+                "description": "[How to create Personal Access Token](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Operate - Lock  \n- Devices - Read",
+                "data": {
+                    "access_token": "Personal Access Key"
+                }
+            }
+        },
+        "error": {
+            "auth": "Something went wrong."
+        }
+    }
+}
