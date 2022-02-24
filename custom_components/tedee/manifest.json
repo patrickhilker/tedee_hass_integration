@@ -1,8 +1,8 @@
 {
   "domain": "tedee",
   "name": "Tedee",
-  "documentation": "https://github.com/patrickhilker/tedee_lock",
-  "issue_tracker": "https://github.com/patrickhilker/tedee_lock/issues",
+  "documentation": "https://github.com/patrickhilker/tedee_hass_integration",
+  "issue_tracker": "https://github.com/patrickhilker/tedee_hass_integration/issues",
   "dependencies": [],
   "codeowners": ["@patrickhilker"],
   "requirements": ["pytedee>=0.0.3"],
