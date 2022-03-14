@@ -14,6 +14,8 @@ To use the integration you need the [tedee bridge](https://tedee.com/product-inf
 
 This custom component can be installed using [HACS](https://hacs.xyz/).
 
+*Important:* If you are a former user of [joerg65/tedee_lock](https://github.com/joerg65/tedee_lock), please uninstall it by deleting `/config/custom_components/tedee_lock` and remove the configuration from your `configuration.yaml`. You can reuse the personal access key, so you might keep it.
+
 ## Setup
 
 ### Create personal access key
