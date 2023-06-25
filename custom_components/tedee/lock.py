@@ -45,7 +45,28 @@ class TedeeLock(LockEntity):
         
         self._lock = lock
         self._client = client
+        self._id = ""
+        self._name = STATE_UNKNOWN
         self._state = STATE_UNKNOWN
+        self._extra_state_attributes[ATTR_ID] = STATE_UNKNOWN
+        self._extra_state_attributes[ATTR_BATTERY_LEVEL] = STATE_UNKNOWN
+        self._extra_state_attributes[ATTR_BATTERY_CHARGING] = STATE_UNKNOWN
+        self._extra_state_attributes[ATTR_NUMERIC_STATE] = STATE_UNKNOWN
+        self._extra_state_attributes[ATTR_CONNECTED] = STATE_UNKNOWN
+        self._extra_state_attributes[ATTR_SUPPORT_PULLSPING] = STATE_UNKNOWN
+        self._extra_state_attributes[ATTR_DURATION_PULLSPRING] = STATE_UNKNOWN
+
+    async def async_update(self):
+        self._id = await self._lock.get_id()
+        self._name = await self._lock.get_name()
+        self._state = await self._lock.get_state()
+
+        self._extra_state_attributes[ATTR_BATTERY_LEVEL] = await self._lock.get_battery_level()
+        self._extra_state_attributes[ATTR_BATTERY_CHARGING] = await self._lock.get_is_charging()
+        self._extra_state_attributes[ATTR_NUMERIC_STATE] = await self._lock.get_state()
+        self._extra_state_attributes[ATTR_CONNECTED] = await self._lock.is_connected()
+        self._extra_state_attributes[ATTR_SUPPORT_PULLSPING] = await self._lock.get_is_enabled_pullspring()
+        self._extra_state_attributes[ATTR_DURATION_PULLSPRING] = await self._lock.get_duration_pullspring()
 
     @property
     def supported_features(self):
@@ -57,34 +78,34 @@ class TedeeLock(LockEntity):
 
     @property
     def name(self) -> str:
-        return self._lock.get_name()
+        return self._name
 
     @property
     def is_locked(self) -> bool:
-        return self._lock.get_state() == 6
+        return self._state == 6
 
     @property
     def is_unlocking(self) -> bool:
-        return self._lock.get_state() == 4
+        return self._state == 4
 
     @property
     def is_locking(self) -> bool:
-        return self._lock.get_state() == 5
+        return self._state == 5
 
     @property
     def extra_state_attributes(self):
         return {
-            ATTR_ID: self._lock.get_id(),
+            ATTR_ID: self._id,
 
-            ATTR_BATTERY_LEVEL: self._lock.get_battery_level(),
-            ATTR_BATTERY_CHARGING: self._lock.get_is_charging(),
+            ATTR_BATTERY_LEVEL: self._extra_state_attributes[ATTR_BATTERY_LEVEL] ,
+            ATTR_BATTERY_CHARGING: self._extra_state_attributes[ATTR_BATTERY_CHARGING],
 
-            ATTR_NUMERIC_STATE: self._lock.get_state(),
+            ATTR_NUMERIC_STATE: self._extra_state_attributes[ATTR_NUMERIC_STATE],
 
-            ATTR_CONNECTED: self._lock.is_connected(),
+            ATTR_CONNECTED: self._extra_state_attributes[ATTR_CONNECTED],
 
-            ATTR_SUPPORT_PULLSPING: self._lock.get_is_enabled_pullspring(),
-            ATTR_DURATION_PULLSPRING: self._lock.get_duration_pullspring(),
+            ATTR_SUPPORT_PULLSPING: self._extra_state_attributes[ATTR_SUPPORT_PULLSPING],
+            ATTR_DURATION_PULLSPRING: self._extra_state_attributes[ATTR_DURATION_PULLSPRING],
         }
 
     @property
@@ -93,7 +114,7 @@ class TedeeLock(LockEntity):
             "identifiers": {
                 (DOMAIN, self.unique_id)
             },
-            "name": self._lock.get_name(),
+            "name": self._name,
             "manufacturer": "tedee"
         }
 
@@ -103,21 +124,21 @@ class TedeeLock(LockEntity):
 
     def unlock(self, **kwargs):
         try:
-            self._client.unlock(self._lock.get_id())
+            self._client.unlock(self._id)
         except TedeeClientException:
             _LOGGER.debug("Failed to unlock the door.")
 
     def lock(self, **kwargs):
         try:
-            self._client.lock(self._lock.get_id())
+            self._client.lock(self._id)
         except TedeeClientException:
             _LOGGER.debug("Failed to lock the door.")
 
     def open(self, **kwargs):
         try:
-            self._client.open(self._lock.get_id())
+            self._client.open(self._id)
         except TedeeClientException:
             _LOGGER.debug("Failed to unlatch the door.")
 
     def update(self):
-        self._available = self._client.update(self._lock.get_id())
+        self._available = self._client.update(self._id)
