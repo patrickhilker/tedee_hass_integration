@@ -1,16 +1,11 @@
 import logging
-from pytedee import TedeeClient, TedeeClientException, Lock
-
-from homeassistant.core import callback
-from homeassistant.helpers.event import async_call_later
+from pytedee_async import TedeeClientException
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, CONF_ACCESS_TOKEN, ATTR_BATTERY_CHARGING, STATE_UNKNOWN
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, ATTR_BATTERY_CHARGING
 
-from .const import (
-    DOMAIN,
-    NAME,
-    SCAN_INTERVAL
-)
+from .const import DOMAIN, CLIENT
+
 
 ATTR_NUMERIC_STATE = "numeric_state"
 ATTR_SUPPORT_PULLSPING = "support_pullspring"
@@ -19,54 +14,32 @@ ATTR_CONNECTED = "connected"
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, config, async_add_entities):
-    pak = config.data.get(CONF_ACCESS_TOKEN)
-
-    try:
-        client = await hass.async_add_executor_job(lambda : TedeeClient(pak))
-    except TedeeClientException as exc:
-        _LOGGER.error(exc)
-        return
-
-    locks = client.get_locks()
-    _LOGGER.debug("available_locks: %s", locks)
-
-    if not locks:
-        # No locks found; abort setup routine.
-        _LOGGER.info("No locks found in your account")
-        return
-
-    async_add_entities([TedeeLock(lock, client) for lock in locks], True)
+async def async_setup_entry(hass, entry, async_add_entities):
+    
+    tedee_client = hass.data[DOMAIN][CLIENT]
+    async_add_entities(
+        [TedeeLock(lock, tedee_client) for lock in tedee_client.locks], True
+    )
 
 class TedeeLock(LockEntity):
 
     def __init__(self, lock, client):
-        _LOGGER.debug("LockEntity: %s", lock.get_name())
+        _LOGGER.debug("LockEntity: %s", lock.name)
         
         self._lock = lock
         self._client = client
-        self._id = ""
-        self._name = STATE_UNKNOWN
-        self._state = STATE_UNKNOWN
-        self._extra_state_attributes[ATTR_ID] = STATE_UNKNOWN
-        self._extra_state_attributes[ATTR_BATTERY_LEVEL] = STATE_UNKNOWN
-        self._extra_state_attributes[ATTR_BATTERY_CHARGING] = STATE_UNKNOWN
-        self._extra_state_attributes[ATTR_NUMERIC_STATE] = STATE_UNKNOWN
-        self._extra_state_attributes[ATTR_CONNECTED] = STATE_UNKNOWN
-        self._extra_state_attributes[ATTR_SUPPORT_PULLSPING] = STATE_UNKNOWN
-        self._extra_state_attributes[ATTR_DURATION_PULLSPRING] = STATE_UNKNOWN
+        self._id = self._lock.id
 
-    async def async_update(self):
-        self._id = await self._lock.get_id()
-        self._name = await self._lock.get_name()
-        self._state = await self._lock.get_state()
-
-        self._extra_state_attributes[ATTR_BATTERY_LEVEL] = await self._lock.get_battery_level()
-        self._extra_state_attributes[ATTR_BATTERY_CHARGING] = await self._lock.get_is_charging()
-        self._extra_state_attributes[ATTR_NUMERIC_STATE] = await self._lock.get_state()
-        self._extra_state_attributes[ATTR_CONNECTED] = await self._lock.is_connected()
-        self._extra_state_attributes[ATTR_SUPPORT_PULLSPING] = await self._lock.get_is_enabled_pullspring()
-        self._extra_state_attributes[ATTR_DURATION_PULLSPRING] = await self._lock.get_duration_pullspring()
+        self._attr_has_entity_name = True
+        self._attr_name = "Lock"
+        self._attr_unique_id = f"{lock.id}-lock"
+        
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._lock.id)},
+            name=self._lock.name,
+            manufacturer="Tedee",
+            model=self._lock.type
+        )
 
     @property
     def supported_features(self):
@@ -75,10 +48,6 @@ class TedeeLock(LockEntity):
     @property
     def available(self) -> bool:
         return self._available
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def is_locked(self) -> bool:
@@ -91,54 +60,44 @@ class TedeeLock(LockEntity):
     @property
     def is_locking(self) -> bool:
         return self._state == 5
+    
+    @property
+    def is_jammed(self) -> bool:
+        return self._state == 3
 
     @property
     def extra_state_attributes(self):
         return {
             ATTR_ID: self._id,
-
-            ATTR_BATTERY_LEVEL: self._extra_state_attributes[ATTR_BATTERY_LEVEL] ,
-            ATTR_BATTERY_CHARGING: self._extra_state_attributes[ATTR_BATTERY_CHARGING],
-
-            ATTR_NUMERIC_STATE: self._extra_state_attributes[ATTR_NUMERIC_STATE],
-
-            ATTR_CONNECTED: self._extra_state_attributes[ATTR_CONNECTED],
-
-            ATTR_SUPPORT_PULLSPING: self._extra_state_attributes[ATTR_SUPPORT_PULLSPING],
-            ATTR_DURATION_PULLSPRING: self._extra_state_attributes[ATTR_DURATION_PULLSPRING],
+            ATTR_BATTERY_LEVEL: self._lock.battery_level,
+            ATTR_BATTERY_CHARGING: self._lock.is_charging,
+            ATTR_NUMERIC_STATE: self._lock.state,
+            ATTR_CONNECTED: self._lock.is_connected,
+            ATTR_SUPPORT_PULLSPING: self._lock.is_enabled_pullspring,
+            ATTR_DURATION_PULLSPRING: self._lock.duration_pullspring,
         }
 
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {
-                (DOMAIN, self.unique_id)
-            },
-            "name": self._name,
-            "manufacturer": "tedee"
-        }
+    async def async_update(self):
+        self._available = await self._client.update(self._id)
+        self._lock = self._client.find_lock(self._id)
+        self._id = self._lock.id
+        self._state = self._lock.state
 
-    @property
-    def unique_id(self) -> str:
-        return self._lock.get_id()
-
-    def unlock(self, **kwargs):
+        
+    async def async_unlock(self, **kwargs):
         try:
-            self._client.unlock(self._id)
+            await self._client.unlock(self._id)
         except TedeeClientException:
             _LOGGER.debug("Failed to unlock the door.")
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         try:
-            self._client.lock(self._id)
+            await self._client.lock(self._id)
         except TedeeClientException:
             _LOGGER.debug("Failed to lock the door.")
 
-    def open(self, **kwargs):
+    async def async_open(self, **kwargs):
         try:
-            self._client.open(self._id)
+            await self._client.open(self._id)
         except TedeeClientException:
-            _LOGGER.debug("Failed to unlatch the door.")
-
-    def update(self):
-        self._available = self._client.update(self._id)
+            _LOGGER.debug("Failed to unlatch the door.")        

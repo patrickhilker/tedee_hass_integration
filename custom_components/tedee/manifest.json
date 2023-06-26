@@ -5,7 +5,7 @@
   "issue_tracker": "https://github.com/patrickhilker/tedee_hass_integration/issues",
   "dependencies": [],
   "codeowners": ["@patrickhilker"],
-  "requirements": ["pytedee-async>=0.0.5"],
+  "requirements": ["pytedee-async>=0.0.8"],
   "version": "2023.6.0",
   "config_flow": true,
   "iot_class": "cloud_polling"
