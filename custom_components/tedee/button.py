@@ -8,7 +8,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     tedee_client = hass.data[DOMAIN][CLIENT]
-    _LOGGER.warn(f"Locks: {[lock.name for lock in tedee_client.locks]}")
     async_add_entities(
         [TedeeUnlatchButton(tedee_client, lock) for lock in tedee_client.locks], True
     )
