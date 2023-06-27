@@ -13,5 +13,15 @@
         "error": {
             "auth": "Something went wrong."
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Update Configuration",
+                "data": {
+                    "access_token": "Personal Access Key"
+                }
+            }
+        }
     }
 }

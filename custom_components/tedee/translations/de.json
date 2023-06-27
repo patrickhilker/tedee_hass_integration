@@ -13,5 +13,15 @@
         "error": {
             "auth": "Etwas hat nicht geklappt."
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Konfiguration aktualisieren",
+                "data": {
+                    "access_token": "Personal Access Key"
+                }
+            }
+        }
     }
 }
