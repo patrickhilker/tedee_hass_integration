@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from pytedee_async import TedeeClient, TedeeClientException, TedeeAuthException
+from pytedee_async import TedeeClient, TedeeClientException, TedeeAuthException, TedeeConnectionException
 
 from .const import DOMAIN, CLIENT
 
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
         # TODO: raise ConfigEntryAuthFailed(...) from ex
         # TODO: implement handler in config_flow 
-    except (TedeeClientException, Exception) as ex:
+    except (TedeeClientException, TedeeConnectionException, Exception) as ex:
         _LOGGER.error(ex)
         raise ConfigEntryNotReady(f"Tedee failed to setup. Error: {ex}.") from ex
 

@@ -1,8 +1,9 @@
 import logging
-from pytedee_async import TedeeClientException
+from pytedee_async import TedeeClientException, TedeeAuthException, TedeeConnectionException
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, ATTR_BATTERY_CHARGING
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, CLIENT
 
@@ -78,7 +79,21 @@ class TedeeLock(LockEntity):
         }
 
     async def async_update(self):
-        self._available = await self._client.update(self._id)
+        try:
+            self._available = await self._client.update(self._id)
+        except TedeeAuthException as ex:
+            msg = "Credentials invalid. Probably your token expired. Update in integration settings."
+            _LOGGER.error(msg)
+            raise HomeAssistantError(msg)
+        except TedeeConnectionException as ex:
+            msg = "Problem while establish connection to the API. Maybe you're offline. Try again later."
+            _LOGGER.warn(msg)
+            raise HomeAssistantError(msg)
+        except TedeeClientException as ex:
+            msg = f"Internal error occured with Tedee integration, please report to developers. Original Error: {msg}"
+            _LOGGER.error(msg)
+            raise HomeAssistantError(msg)
+
         self._lock = self._client.find_lock(self._id)
         self._id = self._lock.id
         self._state = self._lock.state
