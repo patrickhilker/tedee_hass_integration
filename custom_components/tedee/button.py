@@ -28,8 +28,6 @@ class TedeeUnlatchButton(ButtonEntity):
             model=self._lock.type
         )
         
-    async def async_update(self):
-        self._lock = self._tedee_client.find_lock(self._lock.id)
 
     async def async_press(self, **kwargs) -> None:
         await self._tedee_client.open(self._lock.id)

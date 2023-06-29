@@ -26,8 +26,6 @@ class TedeeBatterySensor(SensorEntity):
             model=self._lock.type
         )
 
-    async def async_update(self):
-        self._lock = self._tedee_client.find_lock(self._lock.id)
 
     @property
     def native_value(self):

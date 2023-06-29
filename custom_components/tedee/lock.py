@@ -47,10 +47,6 @@ class TedeeLock(LockEntity):
         return SUPPORT_OPEN
 
     @property
-    def available(self) -> bool:
-        return self._available
-
-    @property
     def is_locked(self) -> bool:
         return self._state == 6
 
@@ -77,26 +73,6 @@ class TedeeLock(LockEntity):
             ATTR_SUPPORT_PULLSPING: self._lock.is_enabled_pullspring,
             ATTR_DURATION_PULLSPRING: self._lock.duration_pullspring,
         }
-
-    async def async_update(self):
-        try:
-            self._available = await self._client.update(self._id)
-        except TedeeAuthException as ex:
-            msg = "Credentials invalid. Probably your token expired. Update in integration settings."
-            _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
-        except TedeeConnectionException as ex:
-            msg = "Problem while establish connection to the API. Maybe you're offline. Try again later."
-            _LOGGER.warn(msg)
-            raise HomeAssistantError(msg)
-        except TedeeClientException as ex:
-            msg = f"Internal error occured with Tedee integration, please report to developers. Original Error: {msg}"
-            _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
-
-        self._lock = self._client.find_lock(self._id)
-        self._id = self._lock.id
-        self._state = self._lock.state
 
         
     async def async_unlock(self, **kwargs):
