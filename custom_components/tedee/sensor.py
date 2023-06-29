@@ -1,17 +1,21 @@
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import callback
 from .const import DOMAIN, CLIENT
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    tedee_client = hass.data[DOMAIN][CLIENT]
+    
+    coordinator = hass[DOMAIN][entry.entry_id]
+
     async_add_entities(
-        [TedeeBatterySensor(tedee_client, lock) for lock in tedee_client.locks], True
+        [TedeeBatterySensor(lock, coordinator) for lock in coordinator.data.values()]
     )
 
-class TedeeBatterySensor(SensorEntity):
+class TedeeBatterySensor(CoordinatorEntity, SensorEntity):
 
-    def __init__(self, tedee_client, lock):
-        self._tedee_client = tedee_client
+    def __init__(self, lock, coordinator):
+        super().__init__(coordinator)
         self._lock = lock
         self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_native_unit_of_measurement = '%'
@@ -26,7 +30,12 @@ class TedeeBatterySensor(SensorEntity):
             model=self._lock.type
         )
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._lock = self.coordinator.data[self._id]
+        self.async_write_ha_state()
 
     @property
     def native_value(self):
-        return self._tedee_client.find_lock(self._lock.id).battery_level
+        return self._lock.battery_level

@@ -1,9 +1,10 @@
 import logging
-from pytedee_async import TedeeClientException, TedeeAuthException, TedeeConnectionException
+from pytedee_async import TedeeClientException
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, ATTR_BATTERY_CHARGING
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, CLIENT
 
@@ -17,18 +18,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     
-    tedee_client = hass.data[DOMAIN][CLIENT]
+    coordinator = hass[DOMAIN][entry.entry_id]
     async_add_entities(
-        [TedeeLock(lock, tedee_client) for lock in tedee_client.locks], True
+        [TedeeLock(lock, coordinator) for lock in coordinator.data.values()]
     )
 
-class TedeeLock(LockEntity):
+class TedeeLock(CoordinatorEntity, LockEntity):
 
-    def __init__(self, lock, client):
+    def __init__(self, lock, coordinator):
+        super().__init__(coordinator)
         _LOGGER.debug("LockEntity: %s", lock.name)
         
         self._lock = lock
-        self._client = client
         self._id = self._lock.id
 
         self._attr_has_entity_name = True
@@ -73,22 +74,28 @@ class TedeeLock(LockEntity):
             ATTR_SUPPORT_PULLSPING: self._lock.is_enabled_pullspring,
             ATTR_DURATION_PULLSPRING: self._lock.duration_pullspring,
         }
+    
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._lock = self.coordinator.data[self._id]
+        self.async_write_ha_state()
 
         
     async def async_unlock(self, **kwargs):
         try:
-            await self._client.unlock(self._id)
+            await self.coordinator._tedee_client.unlock(self._id)
         except TedeeClientException:
             _LOGGER.debug("Failed to unlock the door.")
 
     async def async_lock(self, **kwargs):
         try:
-            await self._client.lock(self._id)
+            await self.coordinator._tedee_client.lock(self._id)
         except TedeeClientException:
             _LOGGER.debug("Failed to lock the door.")
 
     async def async_open(self, **kwargs):
         try:
-            await self._client.open(self._id)
+            await self.coordinator._tedee_client.open(self._id)
         except TedeeClientException:
             _LOGGER.debug("Failed to unlatch the door.")        

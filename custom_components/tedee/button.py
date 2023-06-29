@@ -1,21 +1,24 @@
 import logging
 from homeassistant.components.button import ButtonEntity
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, CLIENT
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    tedee_client = hass.data[DOMAIN][CLIENT]
+    
+    coordinator = hass[DOMAIN][entry.entry_id]
     async_add_entities(
-        [TedeeUnlatchButton(tedee_client, lock) for lock in tedee_client.locks], True
+        [TedeeUnlatchButton(lock, coordinator) for lock in coordinator.data.values()]
     )
 
-class TedeeUnlatchButton(ButtonEntity):
+class TedeeUnlatchButton(CoordinatorEntity, ButtonEntity):
 
-    def __init__(self, tedee_client, lock):
-        self._tedee_client = tedee_client
+    def __init__(self, lock, coordinator):
+        super().__init__(coordinator)
         self._lock = lock
         self._attr_has_entity_name = True
         self._attr_name = "Unlatch"
@@ -27,7 +30,13 @@ class TedeeUnlatchButton(ButtonEntity):
             manufacturer="Tedee",
             model=self._lock.type
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._lock = self.coordinator.data[self._id]
+        self.async_write_ha_state()
         
 
     async def async_press(self, **kwargs) -> None:
-        await self._tedee_client.open(self._lock.id)
+        await self.coordinator._tedee_client.open(self._lock.id)
