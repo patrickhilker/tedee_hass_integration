@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     
-    coordinator = hass[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [TedeeUnlatchButton(lock, coordinator) for lock in coordinator.data.values()]
     )
@@ -29,14 +29,14 @@ class TedeeUnlatchButton(CoordinatorEntity, ButtonEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._lock.id)},
             name=self._lock.name,
-            manufacturer="Tedee",
+            manufacturer="tedee",
             model=self._lock.type
         )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._lock = self.coordinator.data[self._id]
+        self._lock = self.coordinator.data[self._lock.id]
         self.async_write_ha_state()
         
 

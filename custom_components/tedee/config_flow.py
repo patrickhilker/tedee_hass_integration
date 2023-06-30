@@ -63,13 +63,10 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=PERSONAL_KEY_SCHEMA,
             )
         self.hass.config_entries.async_update_entry(
-                    self.reauth_entry, data=user_input
-                )   
+                self.reauth_entry, data=user_input
+            )   
         await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-        return self.async_create_entry(
-                    title="",
-                    data={}
-                )
+        return self.async_abort(reason="reauth_successful")
     
     
 class OptionsFlowHandler(config_entries.OptionsFlow):

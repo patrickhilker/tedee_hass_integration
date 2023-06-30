@@ -24,9 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     pak = entry.data.get(CONF_ACCESS_TOKEN)
 
-    tedee_client = TedeeClient(pak)
+    tedee_client = TedeeClient(pak, 10)
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator = TedeeApiCoordinator(tedee_client)
+    hass.data[DOMAIN][entry.entry_id] = coordinator = TedeeApiCoordinator(hass, tedee_client)
 
     await coordinator.async_config_entry_first_refresh()
 

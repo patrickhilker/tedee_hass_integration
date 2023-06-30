@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     
-    coordinator = hass[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [TedeeLock(lock, coordinator) for lock in coordinator.data.values()]
     )
@@ -40,7 +40,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._lock.id)},
             name=self._lock.name,
-            manufacturer="Tedee",
+            manufacturer="tedee",
             model=self._lock.type
         )
 
@@ -50,19 +50,21 @@ class TedeeLock(CoordinatorEntity, LockEntity):
 
     @property
     def is_locked(self) -> bool:
-        return self._state == 6
+        '''Get state directly from coordinator for quickest state update'''
+        return self.coordinator._tedee_client.locks_dict[self._lock._id]._state == 6
 
     @property
     def is_unlocking(self) -> bool:
-        return self._state == 4
-
+        return self.coordinator._tedee_client.locks_dict[self._lock._id]._state == 4
+    
     @property
     def is_locking(self) -> bool:
-        return self._state == 5
+        return self.coordinator._tedee_client.locks_dict[self._lock._id]._state == 5
     
     @property
     def is_jammed(self) -> bool:
-        return self._state == 3
+        return self.coordinator._tedee_client.locks_dict[self._lock._id]._state == 3
+
 
     @property
     def extra_state_attributes(self):
@@ -79,7 +81,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._lock = self.coordinator.data[self._id]
+        self._lock = self.coordinator.data[self._lock.id]
         self.async_write_ha_state()
 
         

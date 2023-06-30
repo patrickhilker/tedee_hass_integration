@@ -8,7 +8,17 @@
                 "data": {
                     "access_token": "Personal Access Key"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Update of Personal Access Key required",
+                "description": "tedee needs an updated Personal Access Key, because the existing one is invalid or might have expired.",
+                "data": {
+                    "access_token": "Personal Access Key"
+                }
             }
+        },
+        "abort": {
+            "reauth_successful": "Personal Access Key renewed successfully!"
         },
         "error": {
             "auth": "Something went wrong."

@@ -27,7 +27,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         try:
             _LOGGER.debug("Update coordinator: Getting locks from API")
-            self._tedee_client.get_locks()
+            await self._tedee_client.get_locks()
         except TedeeAuthException as ex:
             msg = "Authentication failed. \
                             Personal Key is either invalid, doesn't have the correct scopes \
@@ -38,11 +38,11 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             _LOGGER.error(ex)
             #raise ConfigEntryNotReady(f"Tedee failed to setup. Error: {ex}.") from ex
             raise UpdateFailed("Querying API failed. Error: %s", ex)
-
+        
         if not self._tedee_client.locks_dict:
             # No locks found; abort setup routine.
-            _LOGGER.warn("No locks found in your account")
+            _LOGGER.warn("No locks found in your account.")
 
-        _LOGGER.debug("available_locks: %s", self._tedee_client.locks_dict.keys())
+        _LOGGER.debug("available_locks: %s", ",".join(self._tedee_client.locks_dict.keys()))
 
         return self._tedee_client.locks_dict
