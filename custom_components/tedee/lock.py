@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from pytedee_async import TedeeClientException
 
-from .const import CLIENT, DOMAIN
+from .const import DOMAIN
 
 ATTR_NUMERIC_STATE = "numeric_state"
 ATTR_SUPPORT_PULLSPING = "support_pullspring"

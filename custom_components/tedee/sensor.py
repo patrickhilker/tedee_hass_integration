@@ -4,7 +4,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CLIENT, DOMAIN
+from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
