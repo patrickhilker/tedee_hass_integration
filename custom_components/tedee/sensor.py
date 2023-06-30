@@ -1,8 +1,11 @@
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
+                                             SensorStateClass)
 from homeassistant.core import callback
-from .const import DOMAIN, CLIENT
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CLIENT, DOMAIN
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     

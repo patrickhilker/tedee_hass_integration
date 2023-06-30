@@ -1,10 +1,11 @@
 import logging
-from pytedee_async import TedeeClientException
+
 from homeassistant.components.button import ButtonEntity
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from pytedee_async import TedeeClientException
 
 from .const import DOMAIN
 

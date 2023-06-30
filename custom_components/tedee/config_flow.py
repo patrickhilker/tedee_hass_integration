@@ -1,16 +1,13 @@
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
-
 from typing import Any, Dict
 
-from .const import (
-    DOMAIN,
-    NAME,
-)
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import callback
+
+from .const import DOMAIN, NAME
 
 PERSONAL_KEY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})
 

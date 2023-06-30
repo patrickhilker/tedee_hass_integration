@@ -1,12 +1,12 @@
 import logging
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
 from pytedee_async import TedeeClient
-from .coordinator import TedeeApiCoordinator
 
-from .const import DOMAIN, CLIENT
+from .const import CLIENT, DOMAIN
+from .coordinator import TedeeApiCoordinator
 
 PLATFORMS = ["lock", "sensor", "button"]
 

@@ -1,14 +1,15 @@
 import logging
-from pytedee_async import TedeeClientException
+
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, ATTR_BATTERY_CHARGING
+from homeassistant.const import (ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
+                                 ATTR_ID)
 from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from pytedee_async import TedeeClientException
 
-from .const import DOMAIN, CLIENT
-
+from .const import CLIENT, DOMAIN
 
 ATTR_NUMERIC_STATE = "numeric_state"
 ATTR_SUPPORT_PULLSPING = "support_pullspring"
