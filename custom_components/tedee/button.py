@@ -1,8 +1,10 @@
 import logging
+from pytedee_async import TedeeClientException
 from homeassistant.components.button import ButtonEntity
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -39,4 +41,8 @@ class TedeeUnlatchButton(CoordinatorEntity, ButtonEntity):
         
 
     async def async_press(self, **kwargs) -> None:
-        await self.coordinator._tedee_client.open(self._lock.id)
+        try:
+            await self.coordinator._tedee_client.open(self._lock.id)
+        except (TedeeClientException, Exception) as ex:
+            _LOGGER.debug("Error while unlatching the door through button: %s", ex)
+            raise HomeAssistantError(ex) from ex

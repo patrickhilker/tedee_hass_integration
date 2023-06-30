@@ -5,6 +5,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, ATTR_BATTERY_CHARGING
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, CLIENT
 
@@ -85,17 +86,23 @@ class TedeeLock(CoordinatorEntity, LockEntity):
     async def async_unlock(self, **kwargs):
         try:
             await self.coordinator._tedee_client.unlock(self._id)
-        except TedeeClientException:
-            _LOGGER.debug("Failed to unlock the door.")
+            await self.coordinator.async_request_refresh()
+        except (TedeeClientException, Exception) as ex:
+            _LOGGER.debug("Failed to unlock the door. Lock %s", self._id)
+            raise HomeAssistantError(ex) from ex
 
     async def async_lock(self, **kwargs):
         try:
             await self.coordinator._tedee_client.lock(self._id)
-        except TedeeClientException:
-            _LOGGER.debug("Failed to lock the door.")
+            await self.coordinator.async_request_refresh()
+        except (TedeeClientException, Exception) as ex:
+            _LOGGER.debug("Failed to lock the door. Lock %s", self._id)
+            raise HomeAssistantError(ex) from ex
 
     async def async_open(self, **kwargs):
         try:
             await self.coordinator._tedee_client.open(self._id)
-        except TedeeClientException:
-            _LOGGER.debug("Failed to unlatch the door.")        
+            await self.coordinator.async_request_refresh()
+        except (TedeeClientException, Exception) as ex:
+            _LOGGER.debug("Failed to unlatch the door. Lock %s", self._id)     
+            raise HomeAssistantError(ex) from ex   

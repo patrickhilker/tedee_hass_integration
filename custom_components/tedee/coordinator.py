@@ -29,22 +29,20 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Update coordinator: Getting locks from API")
             self._tedee_client.get_locks()
         except TedeeAuthException as ex:
-            _LOGGER.error(f"Authentication failed. \
+            msg = "Authentication failed. \
                             Personal Key is either invalid, doesn't have the correct scopes \
                             (Devices: Read, Locks: Operate) or is expired."
-                            )
-            return False
-            # TODO: raise ConfigEntryAuthFailed(...) from ex
-            # TODO: implement handler in config_flow 
+            _LOGGER.error(msg)
+            raise ConfigEntryAuthFailed(msg) from ex
         except (TedeeClientException, Exception) as ex:
             _LOGGER.error(ex)
             #raise ConfigEntryNotReady(f"Tedee failed to setup. Error: {ex}.") from ex
-            raise UpdateFailed(f"Querying API failed. Error: {ex}")
+            raise UpdateFailed("Querying API failed. Error: %s", ex)
 
-        if not self._tedee_client.locks:
+        if not self._tedee_client.locks_dict:
             # No locks found; abort setup routine.
             _LOGGER.warn("No locks found in your account")
 
-        _LOGGER.debug(f"available_locks: {self._tedee_client.locks.keys()}")
+        _LOGGER.debug("available_locks: %s", self._tedee_client.locks_dict.keys())
 
-        return self._tedee_client.locks
+        return self._tedee_client.locks_dict
