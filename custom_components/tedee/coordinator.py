@@ -36,13 +36,12 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed(msg) from ex
         except (TedeeClientException, Exception) as ex:
             _LOGGER.error(ex)
-            #raise ConfigEntryNotReady(f"Tedee failed to setup. Error: {ex}.") from ex
             raise UpdateFailed("Querying API failed. Error: %s", ex)
         
         if not self._tedee_client.locks_dict:
             # No locks found; abort setup routine.
             _LOGGER.warn("No locks found in your account.")
 
-        _LOGGER.debug("available_locks: %s", ",".join(self._tedee_client.locks_dict.keys()))
+        _LOGGER.debug("available_locks: %s", ", ".join(map(str, self._tedee_client.locks_dict.keys())))
 
         return self._tedee_client.locks_dict
