@@ -35,8 +35,6 @@ After this you should see the tedee integration on your Devices & Services page.
 
 ## Roadmap
 
-- ~~Validate personal access key during setup~~ implement reauthentication functionality in config_flow
-
 This project is open for your pull requests - just implement any feature you might need! 🚀
 
 ## Known issues
