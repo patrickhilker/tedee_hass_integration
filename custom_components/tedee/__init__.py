@@ -5,7 +5,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from pytedee_async import TedeeClient
 
-from .const import CLIENT, DOMAIN
+from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
 
 PLATFORMS = ["lock", "sensor", "button"]
