@@ -1,3 +1,5 @@
+import logging
+
 from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
                                              SensorStateClass)
 from homeassistant.core import callback
@@ -6,6 +8,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     
@@ -18,6 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TedeeBatterySensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, lock, coordinator):
+        _LOGGER.debug("Setting up SensorEntity for %s", lock.name)
         super().__init__(coordinator)
         self._lock = lock
         self._attr_device_class = SensorDeviceClass.BATTERY

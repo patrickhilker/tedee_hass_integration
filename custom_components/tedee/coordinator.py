@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TedeeApiCoordinator(DataUpdateCoordinator):
+    """Class to handle fetching data from the tedee API centrally"""
 
     def __init__(self, hass, tedee_client):
         """Initialize coordinator."""

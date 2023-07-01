@@ -28,8 +28,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TedeeLock(CoordinatorEntity, LockEntity):
 
     def __init__(self, lock, coordinator):
+        _LOGGER.debug("Setting up LockEntity for %s", lock.name)
         super().__init__(coordinator)
-        _LOGGER.debug("LockEntity: %s", lock.name)
         
         self._lock = lock
         self._id = self._lock.id
@@ -51,20 +51,19 @@ class TedeeLock(CoordinatorEntity, LockEntity):
 
     @property
     def is_locked(self) -> bool:
-        '''Get state directly from coordinator for quickest state update'''
-        return self.coordinator._tedee_client.locks_dict[self._lock._id]._state == 6
+        return self._lock.state == 6
 
     @property
     def is_unlocking(self) -> bool:
-        return self.coordinator._tedee_client.locks_dict[self._lock._id]._state == 4
+        return self._lock.state == 4
     
     @property
     def is_locking(self) -> bool:
-        return self.coordinator._tedee_client.locks_dict[self._lock._id]._state == 5
+        return self._lock.state == 5
     
     @property
     def is_jammed(self) -> bool:
-        return self.coordinator._tedee_client.locks_dict[self._lock._id]._state == 3
+        return self._lock.state == 3
 
 
     @property
@@ -88,6 +87,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
         
     async def async_unlock(self, **kwargs):
         try:
+            self._lock.state = 4
             await self.coordinator._tedee_client.unlock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
@@ -96,6 +96,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
 
     async def async_lock(self, **kwargs):
         try:
+            self._lock.state = 5
             await self.coordinator._tedee_client.lock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
@@ -104,6 +105,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
 
     async def async_open(self, **kwargs):
         try:
+            self._lock.state = 4
             await self.coordinator._tedee_client.open(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
