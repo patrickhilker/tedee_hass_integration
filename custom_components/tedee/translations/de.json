@@ -8,7 +8,17 @@
                 "data": {
                     "access_token": "Personal Access Key"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Der Personal Access Key muss erneuert werden",
+                "description": "tedee benötigt einen aktualisierten Personal Access Key, weil der bisherige ungültig geworden ist, oder abgelaufen ist..",
+                "data": {
+                    "access_token": "Personal Access Key"
+                }
             }
+        },
+        "abort": {
+            "reauth_successful": "Personal Access Key erfolgreich erneuert!"
         },
         "error": {
             "auth": "Etwas hat nicht geklappt."

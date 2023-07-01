@@ -1,12 +1,12 @@
 import logging
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from pytedee_async import TedeeClient, TedeeClientException, TedeeAuthException
+from homeassistant.core import HomeAssistant
+from pytedee_async import TedeeClient
 
-from .const import DOMAIN, CLIENT
+from .const import DOMAIN
+from .coordinator import TedeeApiCoordinator
 
 PLATFORMS = ["lock", "sensor", "button"]
 
@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     logging.debug("Setting up Tedee integration...")
     hass.data.setdefault(DOMAIN, {})
+
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -23,28 +24,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     pak = entry.data.get(CONF_ACCESS_TOKEN)
 
-    try:
-        tedee_client = await TedeeClient.create(pak)
-    except TedeeAuthException as ex:
-        _LOGGER.error(f"Authentication failed. \
-                        Personal Key is either invalid, doesn't have the correct scopes \
-                        (Devices: Read, Locks: Operate) or is expired."
-                        )
-        return False
-        # TODO: raise ConfigEntryAuthFailed(...) from ex
-        # TODO: implement handler in config_flow 
-    except (TedeeClientException, Exception) as ex:
-        _LOGGER.error(ex)
-        raise ConfigEntryNotReady(f"Tedee failed to setup. Error: {ex}.") from ex
+    tedee_client = TedeeClient(pak)
 
-    _LOGGER.debug("available_locks: %s", tedee_client.locks)
+    hass.data[DOMAIN][entry.entry_id] = coordinator = TedeeApiCoordinator(hass, tedee_client)
 
-    if not tedee_client.locks:
-        # No locks found; abort setup routine.
-        _LOGGER.warn("No locks found in your account")
-        return False
-    
-    hass.data[DOMAIN][CLIENT] = tedee_client
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         
@@ -64,7 +48,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data[DOMAIN].pop(CLIENT)
+        hass.data[DOMAIN].pop(entry.entry_id)
         hass.data[DOMAIN] = {}
 
     return unload_ok
+        
