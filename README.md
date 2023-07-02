@@ -27,11 +27,18 @@ You will need these scopes:
    - Devices - Read
    - Operate - Lock
 
-### Configuration
+### Installation
 
 Go to the integrations page (Configuration - Devices & Services). Click the "+ Add Integration" button in the lower left corner and look for the "tedee" integration. Insert your personal access key and click submit.
 
 After this you should see the tedee integration on your Devices & Services page. This component creates a device for every lock with a lock entity (`lock.name_of_your_lock`).
+
+## Configuration
+
+You can change the following settings after setting up the integration, by going to the integration's settings and pressing the "CONFIGURE" button:
+
+- **Personal Access Key**: You can update your personal access key should it expire soon
+- **Unlock pulls latch**: If checked, a "normal" unlock of your lock will also pull the latch. This is like in the tedee App when you have the "auto-pull" enabled. (Default: Disabled)
 
 ## Roadmap
 

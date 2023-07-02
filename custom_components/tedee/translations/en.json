@@ -29,7 +29,8 @@
             "init": {
                 "title": "Update Configuration",
                 "data": {
-                    "access_token": "Personal Access Key"
+                    "access_token": "Personal Access Key",
+                    "unlock_pulls_latch": "Unlock also pulls latch"
                 }
             }
         }
