@@ -21,16 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    unlock_pulls_latch = entry.data.get(UNLOCK_PULLS_LATCH)
-    _LOGGER.warn("Unlock pulls latch: %s", str(unlock_pulls_latch))
 
     async_add_entities(
-        [TedeeLock(lock, coordinator) for lock in coordinator.data.values()]
+        [TedeeLock(lock, coordinator, entry) for lock in coordinator.data.values()]
     )
 
 class TedeeLock(CoordinatorEntity, LockEntity):
 
-    def __init__(self, lock, coordinator):
+    def __init__(self, lock, coordinator, entry):
         _LOGGER.debug("Setting up LockEntity for %s", lock.name)
         super().__init__(coordinator)
         
@@ -47,6 +45,9 @@ class TedeeLock(CoordinatorEntity, LockEntity):
             manufacturer="tedee",
             model=self._lock.type
         )
+
+        self._unlock_pulls_latch = entry.data.get(UNLOCK_PULLS_LATCH, False)
+        _LOGGER.debug("Unlock pulls latch: %s", str(self._unlock_pulls_latch))
 
     @property
     def supported_features(self):
@@ -91,7 +92,10 @@ class TedeeLock(CoordinatorEntity, LockEntity):
     async def async_unlock(self, **kwargs):
         try:
             self._lock.state = 4
-            await self.coordinator._tedee_client.unlock(self._id)
+            if self._unlock_pulls_latch:
+                await self.coordinator._tedee_client.open(self._id)
+            else:
+                await self.coordinator._tedee_client.unlock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Failed to unlock the door. Lock %s", self._id)

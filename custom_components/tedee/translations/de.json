@@ -29,7 +29,8 @@
             "init": {
                 "title": "Konfiguration aktualisieren",
                 "data": {
-                    "access_token": "Personal Access Key"
+                    "access_token": "Personal Access Key",
+                    "unlock_pulls_latch": "Entsperren des Schlosses zieht die Falle"
                 }
             }
         }
