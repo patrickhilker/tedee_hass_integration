@@ -7,9 +7,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import callback
 
-from .const import DOMAIN, NAME
+from .const import DOMAIN, NAME, UNLOCK_PULLS_LATCH
 
-PERSONAL_KEY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})
 
 class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     
@@ -33,7 +32,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
         
         return self.async_show_form(
-            step_id="user", data_schema=PERSONAL_KEY_SCHEMA
+            step_id="user", data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})
         )
     
     @staticmethod
@@ -57,7 +56,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=PERSONAL_KEY_SCHEMA,
+                data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string}),
             )
         self.hass.config_entries.async_update_entry(
                 self.reauth_entry, data=user_input
@@ -89,7 +88,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     data={}
                 )
 
-        options_schema = PERSONAL_KEY_SCHEMA
+        options_schema = vol.Schema(
+            {
+                vol.Required(CONF_ACCESS_TOKEN, default=self.config_entry.data.get(CONF_ACCESS_TOKEN)): cv.string,
+                vol.Optional(UNLOCK_PULLS_LATCH, default=self.config_entry.options.get(UNLOCK_PULLS_LATCH)): cv.bool
+            }
+        )
 
         return self.async_show_form(
             step_id="init", data_schema=options_schema, errors=errors

@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from pytedee_async import TedeeClientException
 
-from .const import DOMAIN
+from .const import DOMAIN, UNLOCK_PULLS_LATCH
 
 ATTR_NUMERIC_STATE = "numeric_state"
 ATTR_SUPPORT_PULLSPING = "support_pullspring"
@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     
     coordinator = hass.data[DOMAIN][entry.entry_id]
+    unlock_pulls_latch = entry.data.get(UNLOCK_PULLS_LATCH)
+    _LOGGER.warn("Unlock pulls latch: %s", str(unlock_pulls_latch))
+
     async_add_entities(
         [TedeeLock(lock, coordinator) for lock in coordinator.data.values()]
     )
