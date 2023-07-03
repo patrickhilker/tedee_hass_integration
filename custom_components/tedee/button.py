@@ -15,8 +15,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     
     coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
-    entities.extend([TedeeUnlatchButton(lock, coordinator) for lock in coordinator.data.values()])
-    entities.extend([TedeeUnlockUnlatchButton(lock, coordinator) for lock in coordinator.data.values()])
+    for lock in coordinator.data.values():
+        if lock.is_enabled_pullspring:
+            entities.append(TedeeUnlatchButton(lock, coordinator))
+            entities.append(TedeeUnlockUnlatchButton(lock, coordinator))
+
     async_add_entities(entities)
 
 class TedeeUnlatchButton(CoordinatorEntity, ButtonEntity):
