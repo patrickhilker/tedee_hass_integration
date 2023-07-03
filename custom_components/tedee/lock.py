@@ -22,11 +22,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [TedeeLock(lock, coordinator, entry) for lock in coordinator.data.values()]
-    )
+    entities = []
+    for lock in coordinator.data.values():
+        if lock.is_enabled_pullspring:
+            entities.append(TedeeLockWithLatch(lock, coordinator, entry))
+        else:
+            entities.append(TedeeLock(lock, coordinator, entry))
+
+    async_add_entities(entities)
 
 class TedeeLock(CoordinatorEntity, LockEntity):
+    """A tedee lock that doesn't have pullspring enabled"""
 
     def __init__(self, lock, coordinator, entry):
         _LOGGER.debug("Setting up LockEntity for %s", lock.name)
@@ -46,12 +52,6 @@ class TedeeLock(CoordinatorEntity, LockEntity):
             model=self._lock.type
         )
 
-        self._unlock_pulls_latch = entry.data.get(UNLOCK_PULLS_LATCH, False)
-        _LOGGER.debug("Unlock pulls latch: %s", str(self._unlock_pulls_latch))
-
-    @property
-    def supported_features(self):
-        return SUPPORT_OPEN
 
     @property
     def is_locked(self) -> bool:
@@ -92,10 +92,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
     async def async_unlock(self, **kwargs):
         try:
             self._lock.state = 4
-            if self._unlock_pulls_latch:
-                await self.coordinator._tedee_client.open(self._id)
-            else:
-                await self.coordinator._tedee_client.unlock(self._id)
+            await self.coordinator._tedee_client.unlock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Failed to unlock the door. Lock %s", self._id)
@@ -109,6 +106,33 @@ class TedeeLock(CoordinatorEntity, LockEntity):
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Failed to lock the door. Lock %s", self._id)
             raise HomeAssistantError(ex) from ex
+
+
+class TedeeLockWithLatch(TedeeLock):
+    """A tedee lock but has pullspring enabled, so it additional features"""
+
+    def __init__(self, lock, coordinator, entry):
+        super().__init__(lock, coordinator, entry)
+        self._unlock_pulls_latch = entry.data.get(UNLOCK_PULLS_LATCH, False)
+        _LOGGER.debug("Unlock pulls latch: %s", str(self._unlock_pulls_latch))
+
+    @property
+    def supported_features(self):
+        return SUPPORT_OPEN
+
+
+    async def async_unlock(self, **kwargs):
+        try:
+            self._lock.state = 4
+            if self._unlock_pulls_latch:
+                await self.coordinator._tedee_client.open(self._id)
+            else:
+                await self.coordinator._tedee_client.unlock(self._id)
+            await self.coordinator.async_request_refresh()
+        except (TedeeClientException, Exception) as ex:
+            _LOGGER.debug("Failed to unlock the door. Lock %s", self._id)
+            raise HomeAssistantError(ex) from ex
+
 
     async def async_open(self, **kwargs):
         try:
