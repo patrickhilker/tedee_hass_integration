@@ -52,7 +52,6 @@ class TedeeLock(CoordinatorEntity, LockEntity):
             model=self._lock.type
         )
 
-
     @property
     def is_locked(self) -> bool:
         return self._lock.state == 6
@@ -67,8 +66,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
     
     @property
     def is_jammed(self) -> bool:
-        return self._lock.state == 3
-
+        return self._lock.is_state_jammed
 
     @property
     def extra_state_attributes(self):
@@ -106,6 +104,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Failed to lock the door. Lock %s", self._id)
             raise HomeAssistantError(ex) from ex
+
 
 
 class TedeeLockWithLatch(TedeeLock):
