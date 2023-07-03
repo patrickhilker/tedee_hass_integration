@@ -15,6 +15,7 @@ ATTR_NUMERIC_STATE = "numeric_state"
 ATTR_SUPPORT_PULLSPING = "support_pullspring"
 ATTR_DURATION_PULLSPRING = "duration_pullspring"
 ATTR_CONNECTED = "connected"
+ATTR_SEMI_LOCKED = "semi_locked"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +79,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
             ATTR_CONNECTED: self._lock.is_connected,
             ATTR_SUPPORT_PULLSPING: self._lock.is_enabled_pullspring,
             ATTR_DURATION_PULLSPRING: self._lock.duration_pullspring,
+            ATTR_SEMI_LOCKED: self._lock.state == 3
         }
     
     @callback
