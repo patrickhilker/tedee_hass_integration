@@ -92,6 +92,8 @@ class TedeeLock(CoordinatorEntity, LockEntity):
     async def async_unlock(self, **kwargs):
         try:
             self._lock.state = 4
+            self.async_write_ha_state()
+            
             await self.coordinator._tedee_client.unlock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
@@ -101,6 +103,8 @@ class TedeeLock(CoordinatorEntity, LockEntity):
     async def async_lock(self, **kwargs):
         try:
             self._lock.state = 5
+            self.async_write_ha_state()
+
             await self.coordinator._tedee_client.lock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
@@ -125,6 +129,8 @@ class TedeeLockWithLatch(TedeeLock):
     async def async_unlock(self, **kwargs):
         try:
             self._lock.state = 4
+            self.async_write_ha_state()
+
             if self._unlock_pulls_latch:
                 await self.coordinator._tedee_client.open(self._id)
             else:
@@ -138,6 +144,8 @@ class TedeeLockWithLatch(TedeeLock):
     async def async_open(self, **kwargs):
         try:
             self._lock.state = 4
+            self.async_write_ha_state()
+
             await self.coordinator._tedee_client.open(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
