@@ -48,7 +48,10 @@ class TedeeUnlatchButton(CoordinatorEntity, ButtonEntity):
 
     async def async_press(self, **kwargs) -> None:
         try:
+            self._lock.state = 4
+            self.async_write_ha_state()
             await self.coordinator._tedee_client.pull(self._lock.id)
+            await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Error while unlatching the door through button: %s", ex)
             raise HomeAssistantError(ex) from ex
@@ -80,7 +83,10 @@ class TedeeUnlockUnlatchButton(CoordinatorEntity, ButtonEntity):
 
     async def async_press(self, **kwargs) -> None:
         try:
+            self._lock.state = 4
+            self.async_write_ha_state()
             await self.coordinator._tedee_client.open(self._lock.id)
+            await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Error while opening the door through button: %s", ex)
             raise HomeAssistantError(ex) from ex
