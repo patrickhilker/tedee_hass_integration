@@ -1,5 +1,4 @@
 import logging
-import asyncio
 
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 from homeassistant.const import (ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
