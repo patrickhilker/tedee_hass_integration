@@ -1,4 +1,5 @@
 import logging
+import asyncio
 
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 from homeassistant.const import (ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
@@ -93,7 +94,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
         try:
             self._lock.state = 4
             self.async_write_ha_state()
-            
+
             await self.coordinator._tedee_client.unlock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
