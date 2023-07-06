@@ -6,7 +6,7 @@ from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
                                                       UpdateFailed)
 from pytedee_async import TedeeAuthException, TedeeClientException
 
-SCAN_INTERVAL = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=3600)
 
 _LOGGER = logging.getLogger(__name__)
 
