@@ -93,7 +93,7 @@ class TedeeLock(CoordinatorEntity, LockEntity):
         try:
             self._lock.state = 4
             self.async_write_ha_state()
-            
+
             await self.coordinator._tedee_client.unlock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
