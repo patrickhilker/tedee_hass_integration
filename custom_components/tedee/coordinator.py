@@ -1,3 +1,4 @@
+import time
 import logging
 from datetime import timedelta
 
@@ -26,11 +27,22 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
         self._tedee_client = tedee_client
+        self._next_get_locks = time.time()
+
 
     async def _async_update_data(self):
         try:
             _LOGGER.debug("Update coordinator: Getting locks from API")
-            await self._tedee_client.get_locks()
+
+            # once every hours get all lock details, otherwise use the sync endpoint
+            if self._next_get_locks - time.time() <= 0:
+                _LOGGER.debug("Updating through /my/lock endpoint...")
+                await self._tedee_client.get_locks()
+                self._next_get_locks = time.time() + 60*60
+            else:
+                _LOGGER.debug("Updating through /sync endpoint...")
+                await self._tedee_client.sync()
+
         except TedeeAuthException as ex:
             msg = "Authentication failed. \
                             Personal Key is either invalid, doesn't have the correct scopes \
