@@ -81,6 +81,10 @@ class TedeeLock(CoordinatorEntity, LockEntity):
             ATTR_DURATION_PULLSPRING: self._lock.duration_pullspring,
             ATTR_SEMI_LOCKED: self._lock.state == 3
         }
+
+    @property
+    def available(self) -> bool:
+        return self._lock.is_connected
     
     @callback
     def _handle_coordinator_update(self) -> None:
