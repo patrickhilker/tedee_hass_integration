@@ -18,7 +18,23 @@ This custom component can be installed using [HACS](https://hacs.xyz/).
 
 ## Setup
 
-### Create personal access key
+This integration can work locally as well as with the tedee cloud. The local mode is the recommended way to use this integration. Depending on which properties you set during setup, the integration will work in local, cloud mode or local with cloud fallback.
+
+| Properties set | Mode |
+| --- | --- |
+| `Bridge IP Address` and `Local Access Token` | Local |
+| `Personal Access Key` | Cloud |
+| `Bridge IP Address` and `Local Access Token` and `Personal Access Key` | Local with cloud fallback |
+
+
+![Config Flow](./img/config_flow.png)
+
+### Get local access token (local)
+To get your Bridge IP Address and Local Access Token you have to get the Token from the tedee App. Head to your Bridge's settings -> Local API. Make sure `Encrypted token is enabled`, click the eye icon and copy the token. Below the token you can find the IP Address of your Bridge.
+
+<img src="./img/local_api.jpg" alt="Local API" width="400"/>
+
+### Create personal access key (cloud)
 
 See the tedee api docs to learn how to [create a personal access key](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key).
 
@@ -37,8 +53,12 @@ After this you should see the tedee integration on your Devices & Services page.
 
 You can change the following settings after setting up the integration, by going to the integration's settings and pressing the "CONFIGURE" button:
 
-- **Personal Access Key**: You can update your personal access key should it expire soon
-- **Unlock pulls latch**: If checked, a "normal" unlock of your lock will also pull the latch. This is like in the tedee App when you have the "auto-pull" enabled. (Default: Disabled)
+| Property | Description |
+| --- | --- |
+`Personal Access Key` | You can update your personal access key should it expire soon
+`Bridge IP Address` | You can update your bridge IP address should it change
+`Local Access Token` | You can update your local access token should it change
+`Unlock pulls latch` | If checked, a "normal" unlock of your lock will also pull the latch. This is like in the tedee App when you have the "auto-pull" enabled. (Default: Disabled)
 
 ## Roadmap
 
