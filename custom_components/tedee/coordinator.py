@@ -1,13 +1,17 @@
-import time
 import logging
+import time
 from datetime import timedelta
 
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
                                                       UpdateFailed)
-from pytedee_async import TedeeAuthException, TedeeClientException
+from pytedee_async import (TedeeAuthException, TedeeClientException,
+                           TedeeDataUpdateException, TedeeLocalAuthException,
+                           TedeeWebhookException)
 
-SCAN_INTERVAL = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=20)
+STALE_DATA_INTERVAL = 300
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +31,24 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
         self._tedee_client = tedee_client
+        self._initialized = False
         self._next_get_locks = time.time()
+        self._last_data_update = time.time()
+        self._stale_data = False
 
 
     async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+        if (time.time() - self._last_data_update) >= STALE_DATA_INTERVAL and not self._stale_data:
+            _LOGGER.warn("Data hasn't been updated for more than %s minutes. \
+                            Check your connection to the Tedee Bridge/the internet or reload the integration.", \
+                            str(int(STALE_DATA_INTERVAL/60))
+                        )
+            self._stale_data = True
+        elif (time.time() - self._last_data_update) < STALE_DATA_INTERVAL and self._stale_data:
+            _LOGGER.warn("Tedee receiving updated data again.")
+            self._stale_data = False
+
         try:
             _LOGGER.debug("Update coordinator: Getting locks from API")
 
@@ -43,12 +61,24 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Updating through /sync endpoint...")
                 await self._tedee_client.sync()
 
-        except TedeeAuthException as ex:
+            self._last_data_update = time.time()
+
+        except TedeeLocalAuthException as ex:
             msg = "Authentication failed. \
-                            Personal Key is either invalid, doesn't have the correct scopes \
-                            (Devices: Read, Locks: Operate) or is expired."
-            _LOGGER.error(msg)
+                    Local access token is invalid"
             raise ConfigEntryAuthFailed(msg) from ex
+                
+            
+        except TedeeAuthException as ex:
+            # TODO: remove this
+            _LOGGER.error(ex, exc_info=True)
+            msg = "Authentication failed. \
+                        Personal Key is either invalid, doesn't have the correct scopes \
+                        (Devices: Read, Locks: Operate) or is expired."
+            raise ConfigEntryAuthFailed(msg) from ex
+
+        except TedeeDataUpdateException as ex:
+            _LOGGER.debug("Error while updating data: %s", ex)
         except (TedeeClientException, Exception) as ex:
             _LOGGER.error(ex)
             raise UpdateFailed("Querying API failed. Error: %s", ex)
@@ -59,4 +89,24 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
 
         _LOGGER.debug("available_locks: %s", ", ".join(map(str, self._tedee_client.locks_dict.keys())))
 
+        if not self._initialized:
+            self._initialized = True
+
         return self._tedee_client.locks_dict
+    
+
+    @callback
+    def webhook_received(self, data: dict) -> None:
+        _LOGGER.debug("Webhook received: %s", str(data))
+        try:
+            self._tedee_client.parse_webhook_message(data)
+        except TedeeWebhookException as ex:
+            _LOGGER.warn(ex)
+            return
+        
+        self._last_data_update = time.time()
+
+        if self._initialized:
+            self.async_set_updated_data(self._tedee_client.locks_dict) # update listeners and reset coordinator timer
+        else:
+            self.async_update_listeners() # update listeners without resetting coordinator timer
