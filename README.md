@@ -18,16 +18,21 @@ This custom component can be installed using [HACS](https://hacs.xyz/).
 
 ## Setup
 
-This integration can work locally as well as with the tedee cloud. The local mode is the recommended way to use this integration. Depending on which properties you set during setup, the integration will work in local, cloud mode or local with cloud fallback.
+This integration can work locally as well as with the tedee cloud. The local mode is the default way to use this integration. You can optionally set your personal access key to use the cloud mode also. If you set both, the integration will use the local mode with cloud fallback. If you leave the local settings empty and only set the personal access key, the integration will use the cloud mode.
 
+### Config flow
+In the first step of the config flow you can only configure the local API settings. You can opt-out of setting IP address and the local access token, if you want to *only* use the cloud API: <br>
+![Config Flow](./img/config_flow_1.png)
+
+If you check the `Additionally use Cloud API` checkbox in the first step of the config flow you will also get this window, where you can set the personal access key for the cloud API: <br>
+![Config Flow](./img/config_flow_2.png)
+
+### Operation modes
 | Properties set | Mode |
 | --- | --- |
-| `Bridge IP Address` and `Local Access Token` | Local |
-| `Personal Access Key` | Cloud |
-| `Bridge IP Address` and `Local Access Token` and `Personal Access Key` | Local with cloud fallback |
-
-
-![Config Flow](./img/config_flow.png)
+| `Bridge IP Address` and `Local Access Token` | local only |
+| `Personal Access Key` | cloud |
+| `Bridge IP Address` and `Local Access Token` and `Personal Access Key` | local with cloud fallback |
 
 ### Get local access token (local)
 To get your Bridge IP Address and Local Access Token you have to get the Token from the tedee App. Head to your Bridge's settings -> Local API. Make sure `Encrypted token is enabled`, click the eye icon and copy the token. Below the token you can find the IP Address of your Bridge.
@@ -66,7 +71,4 @@ This project is open for your pull requests - just implement any feature you mig
 
 ## Known issues
 
-- The state of the lock gets updated every 10 seconds, so there is no realtime update (but it seems to be on tedees roadmap)
 - If you add a lock after setup you have to restart Home Assistant to see the new device
-- No real error reporting/handling
-- If the tedee server is not available during Home Assistant startup the locks will not come available. You have to restart again.
