@@ -26,15 +26,15 @@ class TedeeWebhookView(HomeAssistantView):
             request: web.Request
         ) -> web.Response:
         """Handle Tedee Webhook requests."""
-        _LOGGER.debug("Tedee Webhook received.")
+        _LOGGER.debug("Tedee Webhook received")
 
         try:
             data = await request.json()
         except ValueError:
-            _LOGGER.warn("Received invalid JSON from Tedee Bridge.")
+            _LOGGER.warning("Received invalid JSON from Tedee Bridge")
             return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
         
         _LOGGER.debug("Received JSON: %s", data)
         self._coordinator.webhook_received(data)
 
-        return self.json_message("Message received.")
+        return self.json_message("Message received")

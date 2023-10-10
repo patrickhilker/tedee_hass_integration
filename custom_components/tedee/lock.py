@@ -8,7 +8,7 @@ from homeassistant.const import (ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
 from homeassistant.exceptions import HomeAssistantError
 from pytedee_async import TedeeClientException
 
-from .const import DOMAIN, UNLOCK_PULLS_LATCH
+from .const import DOMAIN, CONF_UNLOCK_PULLS_LATCH
 from .entity import TedeeEntity, TedeeEntityDescription
 
 ATTR_NUMERIC_STATE = "numeric_state"
@@ -64,7 +64,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     def __init__(self, lock, coordinator, entity_description, entry):
         _LOGGER.debug("Setting up LockEntity for %s", lock.name)
         super().__init__(lock, coordinator, entity_description)
-        self._unlock_pulls_latch = entry.data.get(UNLOCK_PULLS_LATCH, False)
+        self._unlock_pulls_latch = entry.data.get(CONF_UNLOCK_PULLS_LATCH, False)
         _LOGGER.debug("Unlock pulls latch: %s", str(self._unlock_pulls_latch))
         self._id = self._lock.id
 

@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 from pytedee_async import TedeeClient
 
-from .const import DOMAIN, HOME_ASSISTANT_ACCESS_TOKEN, LOCAL_ACCESS_TOKEN
+from .const import DOMAIN, CONF_HOME_ASSISTANT_ACCESS_TOKEN, CONF_LOCAL_ACCESS_TOKEN
 from .coordinator import TedeeApiCoordinator
 from .views import TedeeWebhookView
 
@@ -26,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     pak = entry.data.get(CONF_ACCESS_TOKEN)
     host = entry.data.get(CONF_HOST)
-    local_access_token = entry.data.get(LOCAL_ACCESS_TOKEN)
-    home_assistant_token = entry.data.get(HOME_ASSISTANT_ACCESS_TOKEN, "")
+    local_access_token = entry.data.get(CONF_LOCAL_ACCESS_TOKEN)
+    home_assistant_token = entry.data.get(CONF_HOME_ASSISTANT_ACCESS_TOKEN, "")
 
     tedee_client = TedeeClient(pak, local_access_token, host)
 
@@ -68,7 +68,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     # try:
     #     await coordinator._tedee_client.delete_webhooks()
     # except Exception as ex:
-    #     _LOGGER.warn("Error while deleting webhooks: %s", ex)
+    #     _LOGGER.warning("Error while deleting webhooks: %s", ex)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

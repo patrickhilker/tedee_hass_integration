@@ -40,13 +40,13 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         if (time.time() - self._last_data_update) >= STALE_DATA_INTERVAL and not self._stale_data:
-            _LOGGER.warn("Data hasn't been updated for more than %s minutes. \
-                            Check your connection to the Tedee Bridge/the internet or reload the integration.", \
+            _LOGGER.warning("Data hasn't been updated for more than %s minutes. \
+                            Check your connection to the Tedee Bridge/the internet or reload the integration", \
                             str(int(STALE_DATA_INTERVAL/60))
                         )
             self._stale_data = True
         elif (time.time() - self._last_data_update) < STALE_DATA_INTERVAL and self._stale_data:
-            _LOGGER.warn("Tedee receiving updated data again.")
+            _LOGGER.warning("Tedee receiving updated data again")
             self._stale_data = False
 
         try:
@@ -54,11 +54,11 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
 
             # once every hours get all lock details, otherwise use the sync endpoint
             if self._next_get_locks - time.time() <= 0:
-                _LOGGER.debug("Updating through /my/lock endpoint...")
+                _LOGGER.debug("Updating through /my/lock endpoint")
                 await self._tedee_client.get_locks()
                 self._next_get_locks = time.time() + 60*60
             else:
-                _LOGGER.debug("Updating through /sync endpoint...")
+                _LOGGER.debug("Updating through /sync endpoint")
                 await self._tedee_client.sync()
 
             self._last_data_update = time.time()
@@ -74,7 +74,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             _LOGGER.error(ex, exc_info=True)
             msg = "Authentication failed. \
                         Personal Key is either invalid, doesn't have the correct scopes \
-                        (Devices: Read, Locks: Operate) or is expired."
+                        (Devices: Read, Locks: Operate) or is expired"
             raise ConfigEntryAuthFailed(msg) from ex
 
         except TedeeDataUpdateException as ex:
@@ -85,7 +85,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
         
         if not self._tedee_client.locks_dict:
             # No locks found; abort setup routine.
-            _LOGGER.warn("No locks found in your account.")
+            _LOGGER.warning("No locks found in your account")
 
         _LOGGER.debug("available_locks: %s", ", ".join(map(str, self._tedee_client.locks_dict.keys())))
 
@@ -101,7 +101,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
         try:
             self._tedee_client.parse_webhook_message(data)
         except TedeeWebhookException as ex:
-            _LOGGER.warn(ex)
+            _LOGGER.warning(ex)
             return
         
         self._last_data_update = time.time()

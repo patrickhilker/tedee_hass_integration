@@ -9,8 +9,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (DOMAIN, HOME_ASSISTANT_ACCESS_TOKEN, LOCAL_ACCESS_TOKEN,
-                    NAME, UNLOCK_PULLS_LATCH, USE_CLOUD)
+from .const import (DOMAIN, CONF_HOME_ASSISTANT_ACCESS_TOKEN, CONF_LOCAL_ACCESS_TOKEN,
+                    NAME, CONF_UNLOCK_PULLS_LATCH, CONF_USE_CLOUD)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,14 +29,14 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict = {}
         
         if user_input is not None:
-            if (user_input.get(CONF_HOST) is None and user_input.get(LOCAL_ACCESS_TOKEN) is not None) \
-                or (user_input.get(CONF_HOST) is not None and user_input.get(LOCAL_ACCESS_TOKEN) is None):
+            if (user_input.get(CONF_HOST) is None and user_input.get(CONF_LOCAL_ACCESS_TOKEN) is not None) \
+                or (user_input.get(CONF_HOST) is not None and user_input.get(CONF_LOCAL_ACCESS_TOKEN) is None):
                 errors["base"] = "invalid_local_config"
-            elif not user_input.get(USE_CLOUD, False) and user_input.get(LOCAL_ACCESS_TOKEN) is None and user_input.get(CONF_ACCESS_TOKEN) is None:
+            elif not user_input.get(CONF_USE_CLOUD, False) and user_input.get(CONF_LOCAL_ACCESS_TOKEN) is None and user_input.get(CONF_ACCESS_TOKEN) is None:
                 errors["base"] = "invalid_config"
             if not errors:
 
-                if user_input.get(USE_CLOUD, False):
+                if user_input.get(CONF_USE_CLOUD, False):
                     self._previous_step_data = user_input
                     return await self.async_step_configure_cloud()
                 
@@ -50,9 +50,9 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST): str,
-                    vol.Optional(LOCAL_ACCESS_TOKEN): str,
-                    vol.Optional(HOME_ASSISTANT_ACCESS_TOKEN): str,
-                    vol.Optional(USE_CLOUD, False): bool
+                    vol.Optional(CONF_LOCAL_ACCESS_TOKEN): str,
+                    vol.Optional(CONF_HOME_ASSISTANT_ACCESS_TOKEN): str,
+                    vol.Optional(CONF_USE_CLOUD, False): bool
                 }
             ),
             errors=errors
@@ -98,7 +98,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Optional(CONF_ACCESS_TOKEN, default=self._config.get(CONF_ACCESS_TOKEN, "")): str,
-                        vol.Optional(LOCAL_ACCESS_TOKEN, default=self._config.get(LOCAL_ACCESS_TOKEN, "")): str,
+                        vol.Optional(CONF_LOCAL_ACCESS_TOKEN, default=self._config.get(CONF_LOCAL_ACCESS_TOKEN, "")): str,
                     }
                 ),
             )
@@ -140,10 +140,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         options_schema = vol.Schema(
             {
                 vol.Optional(CONF_ACCESS_TOKEN, default=self.config_entry.data.get(CONF_ACCESS_TOKEN, "")): str,
-                vol.Optional(UNLOCK_PULLS_LATCH, default=self.config_entry.options.get(UNLOCK_PULLS_LATCH, False)): bool,
+                vol.Optional(CONF_UNLOCK_PULLS_LATCH, default=self.config_entry.options.get(CONF_UNLOCK_PULLS_LATCH, False)): bool,
                 vol.Optional(CONF_HOST, default=self.config_entry.data.get(CONF_HOST, "")): str,
-                vol.Optional(LOCAL_ACCESS_TOKEN, default=self.config_entry.data.get(LOCAL_ACCESS_TOKEN, "")): str,
-                vol.Optional(HOME_ASSISTANT_ACCESS_TOKEN, default=self.config_entry.data.get(HOME_ASSISTANT_ACCESS_TOKEN, "")): str,
+                vol.Optional(CONF_LOCAL_ACCESS_TOKEN, default=self.config_entry.data.get(CONF_LOCAL_ACCESS_TOKEN, "")): str,
+                vol.Optional(CONF_HOME_ASSISTANT_ACCESS_TOKEN, default=self.config_entry.data.get(CONF_HOME_ASSISTANT_ACCESS_TOKEN, "")): str,
             }
         )
 
