@@ -36,9 +36,8 @@
             "reauth_successful": "Access Key/Token renewed successfully!"
         },
         "error": {
-            "auth": "Something went wrong.",
-            "invalid_config": "Need to set either \"Personal Access Key\", \"IP Address of the Bridge\" and \"Local Access Token\", or all three.",
-            "invalid_local_config": "If one of \"local access token\" and \"Bridge IP\" is set, both must be set."
+            "invalid_auth": "Authentication failed",
+            "invalid_config": "Need to set either \"Personal Access Key\", \"IP Address of the Bridge\" and \"Local Access Token\", or all three."
         }
     },
     "options": {
