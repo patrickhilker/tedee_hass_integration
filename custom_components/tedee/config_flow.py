@@ -55,12 +55,12 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_HOST) is None
                 and user_input.get(CONF_LOCAL_ACCESS_TOKEN) is not None
             ):
-                errors[CONF_HOST] = "invalid_config"
+                errors[CONF_HOST] = "invalid_host"
             elif (
                 user_input.get(CONF_HOST) is not None
                 and user_input.get(CONF_LOCAL_ACCESS_TOKEN) is None
             ):
-                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_config"
+                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             elif (
                 user_input.get(CONF_HOST) is not None
                 and user_input.get(CONF_LOCAL_ACCESS_TOKEN) is not None
@@ -68,9 +68,9 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     await validate_input(user_input)
                 except InvalidAuth:
-                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_auth"
+                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
                 except CannotConnect:
-                    errors[CONF_HOST] = "cannot_connect"
+                    errors[CONF_HOST] = "invalid_host"
 
             if not errors:
                 if user_input.get(CONF_USE_CLOUD, False):
@@ -100,7 +100,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await validate_input(user_input)
             except InvalidAuth:
-                errors[CONF_ACCESS_TOKEN] = "invalid_auth"
+                errors[CONF_ACCESS_TOKEN] = "invalid_api_key"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
@@ -139,9 +139,9 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self._config | user_input)
             except InvalidAuth:
                 if self._config.get(CONF_ACCESS_TOKEN):
-                    errors[CONF_ACCESS_TOKEN] = "invalid_auth"
+                    errors[CONF_ACCESS_TOKEN] = "invalid_api_key"
                 if self._config.get(CONF_LOCAL_ACCESS_TOKEN):
-                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_auth"
+                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
@@ -218,11 +218,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if user_input.get(CONF_HOST) and not user_input.get(
                 CONF_LOCAL_ACCESS_TOKEN
             ):
-                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_config"
+                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             elif not user_input.get(CONF_HOST) and user_input.get(
                 CONF_LOCAL_ACCESS_TOKEN
             ):
-                errors[CONF_HOST] = "invalid_config"
+                errors[CONF_HOST] = "invalid_host"
             elif user_input.get(CONF_HOST) and user_input.get(CONF_LOCAL_ACCESS_TOKEN):
                 try:
                     await validate_input(
@@ -234,9 +234,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     )
                 except InvalidAuth:
-                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_auth"
+                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
                 except CannotConnect:
-                    errors[CONF_HOST] = "cannot_connect"
+                    errors[CONF_HOST] = "invalid_host"
 
             if user_input.get(CONF_ACCESS_TOKEN):
                 try:
@@ -244,7 +244,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         {CONF_ACCESS_TOKEN: user_input.get(CONF_ACCESS_TOKEN)}
                     )
                 except InvalidAuth:
-                    errors[CONF_ACCESS_TOKEN] = "invalid_auth"
+                    errors[CONF_ACCESS_TOKEN] = "invalid_api_key"
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
 

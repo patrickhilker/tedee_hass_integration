@@ -45,14 +45,14 @@ async def local_api_configure_error(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "invalid_config"}
+    assert result["errors"] == {CONF_HOST: "invalid_host"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.42"}
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_config"}
+    assert result["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_api_key"}
 
     with patch(
         "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
@@ -67,7 +67,7 @@ async def local_api_configure_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_auth"}
+    assert result2["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_api_key"}
 
     with patch(
         "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
@@ -82,7 +82,7 @@ async def local_api_configure_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_HOST: "cannot_connect"}
+    assert result2["errors"] == {CONF_HOST: "invalid_host"}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_USE_CLOUD: True}
@@ -93,7 +93,7 @@ async def local_api_configure_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
-        side_effect=TedeeAuthException("Invalid_Auth"),
+        side_effect=TedeeAuthException("invalid_api_key"),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -103,7 +103,7 @@ async def local_api_configure_error(hass: HomeAssistant) -> None:
         )
 
     assert result3["type"] == FlowResultType.FORM
-    assert result3["errors"] == {CONF_ACCESS_TOKEN: "invalid_auth"}
+    assert result3["errors"] == {CONF_ACCESS_TOKEN: "invalid_api_key"}
 
     with patch(
         "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
@@ -232,8 +232,8 @@ async def test_reauth_flow_errors(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {
-        CONF_ACCESS_TOKEN: "invalid_auth",
-        CONF_LOCAL_ACCESS_TOKEN: "invalid_auth",
+        CONF_ACCESS_TOKEN: "invalid_api_key",
+        CONF_LOCAL_ACCESS_TOKEN: "invalid_api_key",
     }
 
     with patch(
@@ -272,7 +272,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_HOST: "invalid_config"}
+    assert result2["errors"] == {CONF_HOST: "invalid_host"}
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -280,7 +280,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_config"}
+    assert result2["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_api_key"}
 
     with patch(
         "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
@@ -295,7 +295,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_auth"}
+    assert result2["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_api_key"}
 
     with patch(
         "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
@@ -310,7 +310,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_HOST: "cannot_connect"}
+    assert result2["errors"] == {CONF_HOST: "invalid_host"}
 
     with patch(
         "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
@@ -322,7 +322,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_ACCESS_TOKEN: "invalid_auth"}
+    assert result2["errors"] == {CONF_ACCESS_TOKEN: "invalid_api_key"}
 
     with patch(
         "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",

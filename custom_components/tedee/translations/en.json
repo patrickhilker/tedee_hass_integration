@@ -36,8 +36,8 @@
             "reauth_successful": "Access Key/Token renewed successfully!"
         },
         "error": {
-            "invalid_auth": "Authentication failed",
-            "invalid_config": "Need to set either \"Personal Access Key\", \"IP Address of the Bridge\" and \"Local Access Token\", or all three.",
+            "invalid_api_key": "API Key invalid failed",
+            "invalid_host": "Host invalid",
             "cannot_connect": "Cannot connect"
         }
     },
