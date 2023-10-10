@@ -24,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(user_input: dict[str, Any] = None) -> bool:
-    pak = user_input.get(CONF_ACCESS_TOKEN)
-    host = user_input.get(CONF_HOST)
-    local_access_token = user_input.get(CONF_LOCAL_ACCESS_TOKEN)
+    pak = user_input.get(CONF_ACCESS_TOKEN, "")
+    host = user_input.get(CONF_HOST, "")
+    local_access_token = user_input.get(CONF_LOCAL_ACCESS_TOKEN, "")
     tedee_client = TedeeClient(pak, local_access_token, host)
     try:
         await tedee_client.get_locks()
@@ -101,6 +101,8 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(user_input)
             except InvalidAuth:
                 errors[CONF_ACCESS_TOKEN] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 return self.async_create_entry(
@@ -140,6 +142,8 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_ACCESS_TOKEN] = "invalid_auth"
                 if self._config.get(CONF_LOCAL_ACCESS_TOKEN):
                     errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 entry = self.hass.config_entries.async_get_entry(
@@ -211,6 +215,39 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            if user_input.get(CONF_HOST) and not user_input.get(
+                CONF_LOCAL_ACCESS_TOKEN
+            ):
+                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_config"
+            elif not user_input.get(CONF_HOST) and user_input.get(
+                CONF_LOCAL_ACCESS_TOKEN
+            ):
+                errors[CONF_HOST] = "invalid_config"
+            elif user_input.get(CONF_HOST) and user_input.get(CONF_LOCAL_ACCESS_TOKEN):
+                try:
+                    await validate_input(
+                        {
+                            CONF_HOST: user_input.get(CONF_HOST),
+                            CONF_LOCAL_ACCESS_TOKEN: user_input.get(
+                                CONF_LOCAL_ACCESS_TOKEN
+                            ),
+                        }
+                    )
+                except InvalidAuth:
+                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_auth"
+                except CannotConnect:
+                    errors[CONF_HOST] = "cannot_connect"
+
+            if user_input.get(CONF_ACCESS_TOKEN):
+                try:
+                    await validate_input(
+                        {CONF_ACCESS_TOKEN: user_input.get(CONF_ACCESS_TOKEN)}
+                    )
+                except InvalidAuth:
+                    errors[CONF_ACCESS_TOKEN] = "invalid_auth"
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+
             if not errors:
                 # write entry to config and not options dict, pass empty options out
                 self.hass.config_entries.async_update_entry(

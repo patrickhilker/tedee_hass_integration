@@ -37,7 +37,8 @@
         },
         "error": {
             "invalid_auth": "Authentication failed",
-            "invalid_config": "Need to set either \"Personal Access Key\", \"IP Address of the Bridge\" and \"Local Access Token\", or all three."
+            "invalid_config": "Need to set either \"Personal Access Key\", \"IP Address of the Bridge\" and \"Local Access Token\", or all three.",
+            "cannot_connect": "Cannot connect"
         }
     },
     "options": {
