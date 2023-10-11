@@ -28,6 +28,7 @@ async def validate_input(user_input: dict[str, Any] = None) -> bool:
     host = user_input.get(CONF_HOST, "")
     local_access_token = user_input.get(CONF_LOCAL_ACCESS_TOKEN, "")
     tedee_client = TedeeClient(pak, local_access_token, host)
+
     try:
         await tedee_client.get_locks()
     except (TedeeAuthException, TedeeLocalAuthException) as ex:

@@ -33,7 +33,72 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def local_api_configure_error(hass: HomeAssistant) -> None:
+async def test_flow(hass: HomeAssistant) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.tedee.async_setup_entry",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.62",
+                CONF_LOCAL_ACCESS_TOKEN: "token",
+                CONF_USE_CLOUD: False,
+            },
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_HOST: "192.168.1.62",
+        CONF_LOCAL_ACCESS_TOKEN: "token",
+        CONF_USE_CLOUD: False,
+    }
+
+    with patch(
+        "homeassistant.components.tedee.async_setup_entry",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.tedee.config_flow.TedeeClient.get_locks",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == FlowResultType.FORM
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.62",
+                CONF_LOCAL_ACCESS_TOKEN: "token",
+                CONF_USE_CLOUD: True,
+            },
+        )
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "configure_cloud"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_ACCESS_TOKEN: "token"}
+        )
+
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
+        assert result3["data"] == {
+            CONF_HOST: "192.168.1.62",
+            CONF_LOCAL_ACCESS_TOKEN: "token",
+            CONF_USE_CLOUD: True,
+            CONF_ACCESS_TOKEN: 'token'
+        }
+
+async def config_flow_errors(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
