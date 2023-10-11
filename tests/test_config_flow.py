@@ -1,5 +1,9 @@
+"""Test the Tedee config flow."""
 from unittest.mock import patch
 
+from pytedee_async import TedeeAuthException, TedeeLocalAuthException
+
+from homeassistant import config_entries
 from homeassistant.components.tedee.const import (
     CONF_HOME_ASSISTANT_ACCESS_TOKEN,
     CONF_LOCAL_ACCESS_TOKEN,
@@ -7,16 +11,12 @@ from homeassistant.components.tedee.const import (
     CONF_USE_CLOUD,
     DOMAIN,
 )
-
-from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-from pytedee_async import TedeeAuthException, TedeeLocalAuthException
 
 FLOW_UNIQUE_ID = "112233445566778899"
 ACCESS_TOKEN = "api_token"
@@ -34,6 +34,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 
 
 async def test_flow(hass: HomeAssistant) -> None:
+    """Test config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -95,10 +96,12 @@ async def test_flow(hass: HomeAssistant) -> None:
             CONF_HOST: "192.168.1.62",
             CONF_LOCAL_ACCESS_TOKEN: "token",
             CONF_USE_CLOUD: True,
-            CONF_ACCESS_TOKEN: 'token'
+            CONF_ACCESS_TOKEN: "token",
         }
 
+
 async def config_flow_errors(hass: HomeAssistant) -> None:
+    """Test the config flow errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -259,7 +262,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_flow_errors(hass: HomeAssistant) -> None:
-    """Test that the reauth flow works."""
+    """Test that the reauth flow errors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -318,6 +321,7 @@ async def test_reauth_flow_errors(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={},

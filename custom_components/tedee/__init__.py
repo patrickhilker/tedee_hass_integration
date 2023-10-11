@@ -1,12 +1,14 @@
+"""Init the tedee component."""
 import logging
+
+from pytedee_async import TedeeClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.network import get_url, NoURLAvailableError
-from pytedee_async import TedeeClient
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, CONF_HOME_ASSISTANT_ACCESS_TOKEN, CONF_LOCAL_ACCESS_TOKEN
+from .const import CONF_HOME_ASSISTANT_ACCESS_TOKEN, CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from .coordinator import TedeeApiCoordinator
 from .views import TedeeWebhookView
 
@@ -14,14 +16,17 @@ PLATFORMS = ["lock", "sensor", "button"]
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup(hass, config):
+    """Set up the Tedee component."""
     logging.debug("Setting up Tedee integration...")
     hass.data.setdefault(DOMAIN, {})
 
     return True
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Integration setup"""
+    """Integration setup."""
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     pak = entry.data.get(CONF_ACCESS_TOKEN)
@@ -31,7 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     tedee_client = TedeeClient(pak, local_access_token, host)
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator = TedeeApiCoordinator(hass, tedee_client)
+    hass.data[DOMAIN][entry.entry_id] = coordinator = TedeeApiCoordinator(
+        hass, tedee_client
+    )
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -41,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             instance_url = get_url(hass)
             _LOGGER.debug("Registering webhook at %s/api/tedee/webhook", instance_url)
             hass.http.register_view(TedeeWebhookView(coordinator))
-            headers = [
+            headers: list[dict[str, str]] = [
                 # {
                 #     "Authorization": f"Bearer {home_assistant_token}"
                 # }
@@ -50,7 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             # await tedee_client.register_webhook(instance_url + "/api/tedee/webhook", headers)
             await tedee_client.register_webhook(instance_url + "/tedee", headers)
         except NoURLAvailableError:
-            _LOGGER.warning("Could not register webhook, because no Url of Home Assistant could be found")
+            _LOGGER.warning(
+                "Could not register webhook, because no Url of Home Assistant could be found"
+            )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
