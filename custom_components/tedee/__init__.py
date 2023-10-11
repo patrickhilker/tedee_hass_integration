@@ -3,7 +3,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import get_url, NoURLAvailableError
 from pytedee_async import TedeeClient
 
 from .const import DOMAIN, CONF_HOME_ASSISTANT_ACCESS_TOKEN, CONF_LOCAL_ACCESS_TOKEN
@@ -37,21 +37,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Setup webhook if long lived access token
     if home_assistant_token != "":
-
-        instance_url = get_url(hass)
-        _LOGGER.debug("Registering webhook at %s/api/tedee/webhook", instance_url)
-        hass.http.register_view(TedeeWebhookView(coordinator))
-        headers = [
-            # {
-            #     "Authorization": f"Bearer {home_assistant_token}"
-            # }
-        ]
-        # TODO: Switch back to correct URL
-        # await tedee_client.register_webhook(instance_url + "/api/tedee/webhook", headers)
-        await tedee_client.register_webhook(instance_url + "/tedee", headers)
+        try:
+            instance_url = get_url(hass)
+            _LOGGER.debug("Registering webhook at %s/api/tedee/webhook", instance_url)
+            hass.http.register_view(TedeeWebhookView(coordinator))
+            headers = [
+                # {
+                #     "Authorization": f"Bearer {home_assistant_token}"
+                # }
+            ]
+            # TODO: Switch back to correct URL
+            # await tedee_client.register_webhook(instance_url + "/api/tedee/webhook", headers)
+            await tedee_client.register_webhook(instance_url + "/tedee", headers)
+        except NoURLAvailableError:
+            _LOGGER.warning("Could not register webhook, because no Url of Home Assistant could be found")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        
+
     return True
 
 
@@ -68,7 +70,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     # try:
     #     await coordinator._tedee_client.delete_webhooks()
     # except Exception as ex:
-    #     _LOGGER.warning("Error while deleting webhooks: %s", ex)
+    #     _LOGGER.warn("Error while deleting webhooks: %s", ex)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -77,4 +79,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN] = {}
 
     return unload_ok
-        
