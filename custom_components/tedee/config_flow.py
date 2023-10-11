@@ -183,7 +183,8 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 errors=errors,
             )
-        elif self._config.get(CONF_ACCESS_TOKEN):
+
+        if self._config.get(CONF_ACCESS_TOKEN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema(
@@ -196,19 +197,19 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 errors=errors,
             )
-        else:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_LOCAL_ACCESS_TOKEN,
-                            default=self._config.get(CONF_LOCAL_ACCESS_TOKEN),
-                        ): str
-                    }
-                ),
-                errors=errors,
-            )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_LOCAL_ACCESS_TOKEN,
+                        default=self._config.get(CONF_LOCAL_ACCESS_TOKEN),
+                    ): str
+                }
+            ),
+            errors=errors,
+        )
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

@@ -75,7 +75,7 @@ class TedeeButtonEntity(TedeeEntity, ButtonEntity):
             self._lock.state = 4
             self.async_write_ha_state()
             await self.entity_description.press_fn(  # type: ignore[attr-defined]
-                self.coordinator._tedee_client, self._lock.id
+                self.coordinator.tedee_client, self._lock.id
             )
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:

@@ -5,9 +5,9 @@ import logging
 from pytedee_async import TedeeClientException
 
 from homeassistant.components.lock import (
-    SUPPORT_OPEN,
     LockEntity,
     LockEntityDescription,
+    LockEntityFeature,
 )
 from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ID
 from homeassistant.exceptions import HomeAssistantError
@@ -124,9 +124,9 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             self.async_write_ha_state()
 
             if self._unlock_pulls_latch:
-                await self.coordinator._tedee_client.open(self._id)
+                await self.coordinator.tedee_client.open(self._id)
             else:
-                await self.coordinator._tedee_client.unlock(self._id)
+                await self.coordinator.tedee_client.unlock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Failed to unlock the door. Lock %s", self._id)
@@ -138,7 +138,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             self._lock.state = 5
             self.async_write_ha_state()
 
-            await self.coordinator._tedee_client.lock(self._id)
+            await self.coordinator.tedee_client.lock(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Failed to lock the door. Lock %s", self._id)
@@ -151,7 +151,7 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN
+        return LockEntityFeature.OPEN
 
     async def async_open(self, **kwargs):
         """Open the door with pullspring."""
@@ -159,7 +159,7 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
             self._lock.state = 4
             self.async_write_ha_state()
 
-            await self.coordinator._tedee_client.open(self._id)
+            await self.coordinator.tedee_client.open(self._id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             _LOGGER.debug("Failed to unlatch the door. Lock %s", self._id)

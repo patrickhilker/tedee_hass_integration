@@ -21,11 +21,10 @@ async def async_setup(hass, config):
     """Set up the Tedee component."""
     logging.debug("Setting up Tedee integration...")
     hass.data.setdefault(DOMAIN, {})
-
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Integration setup."""
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
@@ -71,13 +70,13 @@ async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     # cleanup webhooks
     # coordinator = hass.data[DOMAIN][entry.entry_id]
     # try:
-    #     await coordinator._tedee_client.delete_webhooks()
+    #     await coordinator.tedee_client.delete_webhooks()
     # except Exception as ex:
     #     _LOGGER.warn("Error while deleting webhooks: %s", ex)
 
