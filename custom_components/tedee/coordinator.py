@@ -39,6 +39,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
         self._next_get_locks = time.time()
         self._last_data_update = time.time()
         self._stale_data = False
+        self._local_api_consecutive_error_count = 0
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
@@ -70,11 +71,14 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
                 await self.tedee_client.sync()
 
             self._last_data_update = time.time()
+            self._local_api_consecutive_error_count = 0
 
         except TedeeLocalAuthException as ex:
-            msg = "Authentication failed. \
-                    Local access token is invalid"
-            raise ConfigEntryAuthFailed(msg) from ex
+            self._local_api_consecutive_error_count += 1
+            if self._local_api_consecutive_error_count > 1:
+                msg = "Authentication failed. \
+                        Local access token is invalid"
+                raise ConfigEntryAuthFailed(msg) from ex
 
         except TedeeAuthException as ex:
             # TODO: remove this exception # pylint: disable=fixme
