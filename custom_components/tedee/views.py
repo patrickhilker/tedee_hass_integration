@@ -16,7 +16,7 @@ class TedeeWebhookView(HomeAssistantView):
     # url = "/api/tedee/webhook"
     # name = "api:tedee:webhook"
 
-    # TODO: Switch back to correct URL
+    # TODO: Switch back to correct URL # pylint: disable=fixme
     url = "/tedee"
     name = "tedee"
     requires_auth = False

@@ -77,7 +77,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed(msg) from ex
 
         except TedeeAuthException as ex:
-            # TODO: remove this
+            # TODO: remove this exception # pylint: disable=fixme
             _LOGGER.exception(ex)
             msg = "Authentication failed. \
                         Personal Key is either invalid, doesn't have the correct scopes \
