@@ -1,0 +1,38 @@
+{
+    "config": {
+        "title": "tedee",
+        "step": {
+            "user": {
+                "title": "Configura tu tedee",
+                "description": "[Cómo crear una Clave de Acceso Personal](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Operate - Lock  \n- Devices - Read",
+                "data": {
+                    "access_token": "Clave de Acceso Personal"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Se requiere actualización de Clave de Acceso Personal",
+                "description": "tedee necesita una Clave de Acceso Personal actualizada, porque la existente es inválida o podría haber expirado.",
+                "data": {
+                    "access_token": "Clave de Acceso Personal"
+                }
+            }
+        },
+        "abort": {
+            "reauth_successful": "¡Clave de Acceso Personal renovada con éxito!"
+        },
+        "error": {
+            "auth": "Algo salió mal."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Actualizar Configuración",
+                "data": {
+                    "access_token": "Clave de Acceso Personal",
+                    "unlock_pulls_latch": "Desbloquear también acciona el cerrojo"
+                }
+            }
+        }
+    }
+}
