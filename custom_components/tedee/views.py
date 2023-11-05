@@ -1,5 +1,5 @@
 """Views for Tedee integration, to be used for webhook from Tedee Bridge."""
-# from aiohttp.hdrs import AUTHORIZATION
+
 from http import HTTPStatus
 import logging
 
@@ -7,21 +7,20 @@ from aiohttp import web
 
 from homeassistant.components.http.view import HomeAssistantView
 
+from .coordinator import TedeeApiCoordinator
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class TedeeWebhookView(HomeAssistantView):
     """Handle Tedee Webhook requests."""
 
-    # url = "/api/tedee/webhook"
-    # name = "api:tedee:webhook"
+    url = "/api/tedee/webhook"
+    name = "api:tedee:webhook"
 
-    # TODO: Switch back to correct URL # pylint: disable=fixme
-    url = "/tedee"
-    name = "tedee"
-    requires_auth = False
+    requires_auth = True
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: TedeeApiCoordinator) -> None:
         """Initialize the view."""
         self._coordinator = coordinator
 

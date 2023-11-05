@@ -1,57 +1,51 @@
 {
     "config": {
-        "title": "tedee",
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "bridge_not_found": "No bridge found in cloud which matches the configured local bridge. Maybe you're using the wrong account?",
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "invalid_host": "Invalid hostname or IP address"
+        },
         "step": {
-            "user": {
-                "title": "Setup your tedee locks",
-                "description": "If you need help finding those settings check the [documentation](https://github.com/patrickhilker/tedee_hass_integration#Setup).",
-                "data": {
-                    "host": "Bridge IP Address (optional)",
-                    "local_access_token": "Local Access Token (optional)",
-                    "home_assistant_access_token": "Home Assistant Long Lived Access Token (optional)",
-                    "use_cloud": "Additonally use Cloud API?"
-                },
-                "data_description": {
-                    "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\".",
-                    "home_assistant_access_token": "Used to allow bridge to push data to Home Assistant. You can find it in the Home Assistant UI under \"Profile\" -> \"Long-Lived Access Tokens\"."
-                }
-            },
             "configure_cloud": {
-                "title": "Configure Cloud API",
-                "description": "Enable fallback to cloud, in case local connection fails. [How to create Personal Access Token](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Operate - Lock  \n- Devices - Read",
                 "data": {
                     "access_token": "Personal Access Key"
-                }
+                },
+                "description": "Enable fallback to cloud, in case local connection fails. [How to create Personal Access Token](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Operate - Lock  \n- Devices - Read",
+                "title": "Configure Cloud API"
             },
             "reauth_confirm": {
-                "title": "Update of Access Keys required",
-                "description": "tedee needs an updated access key, because the existing one is invalid or might have expired.",
                 "data": {
                     "access_token": "Personal Access Key (optional)",
                     "local_access_token": "Local Access Token (optional)"
-                }
-            }
-        },
-        "abort": {
-            "reauth_successful": "Access Key/Token renewed successfully!"
-        },
-        "error": {
-            "invalid_api_key": "API Key invalid failed",
-            "invalid_host": "Host invalid",
-            "cannot_connect": "Cannot connect"
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Update Configuration",
+                },
+                "description": "tedee needs an updated access key, because the existing one is invalid or might have expired.",
+                "title": "Update of Access Keys required"
+            },
+            "select_bridge": {
                 "data": {
-                    "access_token": "Personal Access Key",
-                    "unlock_pulls_latch": "Unlock also pulls latch",
-                    "host": "Bridge IP Address",
-                    "local_access_token": "Local Access Token",
-                    "home_assistant_access_token": "Home Assistant Long Lived Access Token"
-                }
+                    "bridge_id": "Bridge"
+                },
+                "description": "Select the bridge you want to add to Home Assistant.",
+                "title": "Select your bridge"
+            },
+            "user": {
+                "data": {
+                    "home_assistant_access_token": "Home Assistant Long Lived Access Token (optional)",
+                    "host": "Bridge IP Address (optional)",
+                    "local_access_token": "Local Access Token (optional)",
+                    "use_cloud": "Additonally use Cloud API?"
+                },
+                "data_description": {
+                    "home_assistant_access_token": "Used to allow bridge to push data to Home Assistant. You can find it in the Home Assistant UI under \"Profile\" -> \"Long-Lived Access Tokens\".",
+                    "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
+                },
+                "description": "If you need help finding those settings check the [documentation](https://github.com/patrickhilker/tedee_hass_integration#Setup).",
+                "title": "Setup your tedee locks"
             }
         }
     },
@@ -72,6 +66,20 @@
         "sensor": {
             "battery_sensor": {
                 "name": "Battery"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "access_token": "Personal Access Key",
+                    "home_assistant_access_token": "Home Assistant Long Lived Access Token",
+                    "host": "Bridge IP Address",
+                    "local_access_token": "Local Access Token",
+                    "unlock_pulls_latch": "Unlock also pulls latch"
+                },
+                "title": "Update Configuration"
             }
         }
     }

@@ -1,19 +1,26 @@
 """Coordinator for Tedee locks."""
+import asyncio
 from datetime import timedelta
 import logging
 import time
 
 from pytedee_async import (
     TedeeAuthException,
+    TedeeClient,
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
+    TedeeLock,
     TedeeWebhookException,
 )
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import CONF_BRIDGE_ID, CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=20)
 STALE_DATA_INTERVAL = 300
@@ -24,23 +31,30 @@ _LOGGER = logging.getLogger(__name__)
 class TedeeApiCoordinator(DataUpdateCoordinator):
     """Class to handle fetching data from the tedee API centrally."""
 
-    def __init__(self, hass: HomeAssistant, tedee_client) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name="tedee API coordinator",
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=SCAN_INTERVAL,
+        bridge_id_str = entry.data.get(CONF_BRIDGE_ID)
+        bridge_id: int | None = None
+        if bridge_id_str:
+            bridge_id = int(bridge_id_str)
+        self.tedee_client = TedeeClient(
+            personal_token=entry.data.get(CONF_ACCESS_TOKEN),
+            local_token=entry.data.get(CONF_LOCAL_ACCESS_TOKEN),
+            local_ip=entry.data.get(CONF_HOST),
+            bridge_id=bridge_id,
         )
-        self.tedee_client = tedee_client
         self._initialized = False
         self._next_get_locks = time.time()
         self._last_data_update = time.time()
         self._stale_data = False
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
         if (
             time.time() - self._last_data_update
@@ -72,22 +86,18 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             self._last_data_update = time.time()
 
         except TedeeLocalAuthException as ex:
-            msg = "Authentication failed. \
-                    Local access token is invalid"
-            raise ConfigEntryAuthFailed(msg) from ex
+            raise ConfigEntryAuthFailed(
+                "Authentication failed. Local access token is invalid"
+            ) from ex
 
         except TedeeAuthException as ex:
-            # TODO: remove this exception # pylint: disable=fixme
-            _LOGGER.exception(ex)
-            msg = "Authentication failed. \
-                        Personal Key is either invalid, doesn't have the correct scopes \
-                        (Devices: Read, Locks: Operate) or is expired"
-            raise ConfigEntryAuthFailed(msg) from ex
+            raise ConfigEntryAuthFailed(
+                "Authentication failed.  Personal Key is either invalid, doesn't have the correct scopes (Devices: Read, Locks: Operate) or is expired"
+            ) from ex
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
-        except (TedeeClientException, Exception) as ex:
-            _LOGGER.exception(ex)
+        except (TedeeClientException, asyncio.TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
 
         if not self.tedee_client.locks_dict:

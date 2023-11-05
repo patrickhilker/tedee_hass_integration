@@ -1,9 +1,14 @@
 """Config flow for Tedee integration."""
 from collections.abc import Mapping
-import logging
 from typing import Any
 
-from pytedee_async import TedeeAuthException, TedeeClient, TedeeLocalAuthException
+from pytedee_async import (
+    TedeeAuthException,
+    TedeeClient,
+    TedeeClientException,
+    TedeeLocalAuthException,
+)
+from pytedee_async.bridge import TedeeBridge
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -11,8 +16,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
+    CONF_BRIDGE_ID,
     CONF_HOME_ASSISTANT_ACCESS_TOKEN,
     CONF_LOCAL_ACCESS_TOKEN,
     CONF_UNLOCK_PULLS_LATCH,
@@ -20,8 +32,6 @@ from .const import (
     DOMAIN,
     NAME,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(user_input: dict[str, Any]) -> bool:
@@ -35,9 +45,28 @@ async def validate_input(user_input: dict[str, Any]) -> bool:
         await tedee_client.get_locks()
     except (TedeeAuthException, TedeeLocalAuthException) as ex:
         raise InvalidAuth from ex
-    except Exception as ex:
+    except (TedeeClientException, Exception) as ex:
         raise CannotConnect from ex
     return True
+
+
+async def get_local_bridge(host: str, local_access_token: str) -> TedeeBridge:
+    """Get the serial number of the local bridge."""
+    tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
+    try:
+        return await tedee_client.get_local_bridge()
+    except (TedeeClientException, Exception) as ex:
+        raise CannotConnect from ex
+
+
+async def get_bridges(pak: str) -> list[TedeeBridge]:
+    """Get bridges from the cloud."""
+    tedee_client = TedeeClient(pak)
+    try:
+        bridges = await tedee_client.get_bridges()
+        return bridges
+    except (TedeeClientException, Exception) as ex:
+        raise CannotConnect from ex
 
 
 class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -52,6 +81,9 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reload: bool = False
         self._previous_step_data: dict = {}
         self._config: dict = {}
+        self._local_bridge_name: str = ""
+        self._bridges: list[TedeeBridge] = []
+        self._local_bridge: TedeeBridge | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -76,6 +108,11 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 try:
                     await validate_input(user_input)
+                    self._local_bridge = await get_local_bridge(
+                        user_input[CONF_HOST], user_input[CONF_LOCAL_ACCESS_TOKEN]
+                    )
+                    await self.async_set_unique_id(self._local_bridge.serial)
+                    self._abort_if_unique_id_configured()
                 except InvalidAuth:
                     errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
                 except CannotConnect:
@@ -105,7 +142,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Extra step for cloud configuration."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 await validate_input(user_input)
@@ -114,14 +151,94 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
+            bridges: list[TedeeBridge] = []
             if not errors:
-                return self.async_create_entry(
-                    title=NAME, data=user_input | self._previous_step_data
-                )
+                try:
+                    bridges = await get_bridges(user_input[CONF_ACCESS_TOKEN])
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+
+            cloud_bridge: list[TedeeBridge] = []
+            if not errors:
+                # if user has configured local API, make sure the bridge is the same
+                if self._local_bridge:
+                    cloud_bridge = [
+                        bridge
+                        for bridge in bridges
+                        if bridge.serial == self._local_bridge.serial
+                    ]
+                    if not cloud_bridge:
+                        errors["base"] = "bridge_not_found"
+
+            if not errors:
+                if len(bridges) == 1:
+                    await self.async_set_unique_id(bridges[0].serial)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=NAME,
+                        data=user_input
+                        | self._previous_step_data
+                        | {CONF_BRIDGE_ID: bridges[0].bridge_id},
+                    )
+                if len(bridges) > 1:
+                    self._bridges = bridges
+                    self._previous_step_data |= user_input
+                    if cloud_bridge:
+                        await self.async_set_unique_id(cloud_bridge[0].serial)
+                        self._abort_if_unique_id_configured()
+                        return self.async_create_entry(
+                            title=NAME,
+                            data=user_input
+                            | self._previous_step_data
+                            | {CONF_BRIDGE_ID: str(cloud_bridge[0].bridge_id)},
+                        )
+
+                    return await self.async_step_select_bridge()
 
         return self.async_show_form(
             step_id="configure_cloud",
             data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
+            errors=errors,
+        )
+
+    async def async_step_select_bridge(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Select a bridge from the cloud."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            selected_bridge = [
+                bridge
+                for bridge in self._bridges
+                if str(bridge.bridge_id) == user_input[CONF_BRIDGE_ID]
+            ][0]
+            await self.async_set_unique_id(selected_bridge.serial)
+            self._abort_if_unique_id_configured()
+
+            if not errors:
+                return self.async_create_entry(
+                    title=NAME, data=self._previous_step_data | user_input
+                )
+
+        bridge_selection_schema = vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE_ID): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(
+                                value=str(bridge.bridge_id),
+                                label=f"{bridge.name} ({bridge.serial})",
+                            )
+                            for bridge in self._bridges
+                        ],
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(
+            step_id="select_bridge",
+            data_schema=bridge_selection_schema,
             errors=errors,
         )
 
@@ -263,7 +380,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 # write entry to config and not options dict, pass empty options out
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
-                    data=user_input,
+                    data=self.config_entry.data | user_input,
                     options=self.config_entry.options,
                 )
                 return self.async_create_entry(title="", data=user_input)
