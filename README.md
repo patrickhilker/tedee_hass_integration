@@ -4,17 +4,20 @@ Integrate your [tedee smart lock](https://tedee.com/product-info/lock/) into [Ho
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)  
 [![issues_badge](https://img.shields.io/github/issues-raw/patrickhilker/tedee_hass_integration?style=for-the-badge)](https://github.com/patrickhilker/tedee_hass_integration/issues)  
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=patrickhilker&repository=tedee_hass_integration&category=integration)
 
 
-This component gives basic access to your tedee smart lock. Right now it supports to lock and unlock your tedee and pull the spring. Also it gets some additional data as attributes (battery level, charging, connected, infos about pullspring).
+This component gives Home Assistant control of your tedee smart lock. It supports to lock and unlock your tedee lock and pull the spring (if available). Also, it gets some additional data as attributes (battery level, charging, connected, infos about pullspring), a battery sensor and buttons triggering unlocking & unlatching. Both tedee PRO and GO are supported.
 
-To use the integration you need the [tedee bridge](https://tedee.com/product-info/bridge/) connected to your lock.
+> **Note**
+> To use the integration you need the [tedee bridge](https://tedee.com/product-info/bridge/) connected to your lock.
 
 ## Installation
 
 This custom component can be installed using [HACS](https://hacs.xyz/).
 
-*Important:* If you are a former user of [joerg65/tedee_lock](https://github.com/joerg65/tedee_lock), please uninstall it by deleting `/config/custom_components/tedee_lock` and remove the configuration from your `configuration.yaml`. You can reuse the personal access key, so you might keep it.
+> **Warning**
+>  If you are a former user of [joerg65/tedee_lock](https://github.com/joerg65/tedee_lock), please uninstall it by deleting `/config/custom_components/tedee_lock` and remove the configuration from your `configuration.yaml`. You can reuse the personal access key, so you might keep it.
 
 ## Setup
 
@@ -50,6 +53,12 @@ You will need these scopes:
 
 ### Installation
 
+This integration is compatible with [HACS](https://hacs.xyz/), which means that you can easily download and manage updates for it. <br>
+Click the button below to add it to your HACS installation <br>
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=patrickhilker&repository=tedee_hass_integration&category=integration)
+
+or add it manually to HACS
+
 Go to the integrations page (Configuration - Devices & Services). Click the "+ Add Integration" button in the lower left corner and look for the "tedee" integration. Insert your personal access key and click submit.
 
 After this you should see the tedee integration on your Devices & Services page. This component creates a device for every lock with a lock entity (`lock.name_of_your_lock`).
@@ -64,6 +73,7 @@ You can change the following settings after setting up the integration, by going
 `Bridge IP Address` | You can update your bridge IP address should it change
 `Local Access Token` | You can update your local access token should it change
 `Unlock pulls latch` | If checked, a "normal" unlock of your lock will also pull the latch. This is like in the tedee App when you have the "auto-pull" enabled. (Default: Disabled)
+
 
 ## Roadmap
 
