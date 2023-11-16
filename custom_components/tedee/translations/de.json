@@ -4,14 +4,36 @@
         "step": {
             "user": {
                 "title": "tedee einrichten",
-                "description": "[Doku: Personal Access Key erstellen](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Bedienen - Schloss  \n- Geräte - Lesen",
+                "description": "Wenn du Hilfe brauchst diese Einstellungen zu finden siehe die [Dokumentation](https://github.com/patrickhilker/tedee_hass_integration#Setup).",
+                "data": {
+                    "host": "IP Adresse der Bridge (optional)",
+                    "local_access_token": "Lokaler Access Token (optional)",
+                    "use_cloud": "Zusätzlich Cloud API verwenden?"
+                }
+            },
+            "configure_cloud": {
+                "title": "Cloud API einrichten",
+                "description": "Fallback auf Cloud API einrichten. [Doku: Personal Access Key erstellen](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Bedienen - Schloss  \n- Geräte - Lesen",
                 "data": {
                     "access_token": "Personal Access Key"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Der Personal Access Key muss erneuert werden",
+                "description": "tedee benötigt einen aktualisierten Personal Access Key, weil der bisherige ungültig geworden ist, oder abgelaufen ist..",
+                "data": {
+                    "access_token": "Personal Access Key (optional)",
+                    "local_access_token": "Lokaler Access Token (optional)"
+                }
             }
         },
+        "abort": {
+            "reauth_successful": "Personal Access Key erfolgreich erneuert!"
+        },
         "error": {
-            "auth": "Etwas hat nicht geklappt."
+            "auth": "Etwas hat nicht geklappt.",
+            "invalid_config": "Du musst den \"Personal Access Key\", die \"IP Adresse der Bridge\" und das \"Lokale Access Token\" oder alle drei setzen.",
+            "invalid_local_config": "Wenn die \"IP Adresse der Bridge\" ode das \"Lokale Access Token\" gesetzt sind, muss auch das jeweils andere gesetzt sein."
         }
     },
     "options": {
@@ -19,7 +41,10 @@
             "init": {
                 "title": "Konfiguration aktualisieren",
                 "data": {
-                    "access_token": "Personal Access Key"
+                    "access_token": "Personal Access Key",
+                    "unlock_pulls_latch": "Entsperren des Schlosses zieht die Falle",
+                    "host": "IP Adresse der Bridge",
+                    "local_access_token": "Lokaler Access Token"
                 }
             }
         }

@@ -1,35 +1,87 @@
-import logging
-from homeassistant.components.button import ButtonEntity
-from homeassistant.helpers.entity import DeviceInfo
+"""Button entity for Tedee locks."""
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from typing import Any
 
-from .const import DOMAIN, CLIENT
+from pytedee_async import TedeeClient, TedeeClientException, TedeeLockState
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    tedee_client = hass.data[DOMAIN][CLIENT]
-    async_add_entities(
-        [TedeeUnlatchButton(tedee_client, lock) for lock in tedee_client.locks], True
-    )
+from .const import DOMAIN
+from .entity import TedeeEntity, TedeeEntityDescription
 
-class TedeeUnlatchButton(ButtonEntity):
 
-    def __init__(self, tedee_client, lock):
-        self._tedee_client = tedee_client
-        self._lock = lock
-        self._attr_has_entity_name = True
-        self._attr_name = "Unlatch"
-        self._attr_unique_id = f"{lock.id}-unlatch-button"
+@dataclass
+class TedeeButtonEntityDescriptionMixin:
+    """Mixin functions for Tedee button entity description."""
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._lock.id)},
-            name=self._lock.name,
-            manufacturer="Tedee",
-            model=self._lock.type
-        )
-        
-    async def async_update(self):
-        self._lock = self._tedee_client.find_lock(self._lock.id)
+    press_fn: Callable[[TedeeClient, int], Coroutine[Any, Any, None]]
 
-    async def async_press(self, **kwargs) -> None:
-        await self._tedee_client.open(self._lock.id)
+
+@dataclass
+class TedeeButtonEntityDescription(
+    ButtonEntityDescription, TedeeEntityDescription, TedeeButtonEntityDescriptionMixin
+):
+    """Describes Tedee button entity."""
+
+
+ENTITIES: tuple[TedeeButtonEntityDescription, ...] = (
+    TedeeButtonEntityDescription(
+        key="unlatch",
+        translation_key="unlatch",
+        icon="mdi:gesture-tap-button",
+        unique_id_fn=lambda lock: f"{lock.lock_id}-unlatch-button",
+        press_fn=lambda client, lock_id: client.pull(lock_id),
+    ),
+    TedeeButtonEntityDescription(
+        key="unlock_unlatch",
+        translation_key="unlock_unlatch",
+        icon="mdi:gesture-tap-button",
+        unique_id_fn=lambda lock: f"{lock.lock_id}-unlockunlatch-button",
+        press_fn=lambda client, lock_id: client.open(lock_id),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Tedee button entity."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    entities = []
+    for lock in coordinator.data.values():
+        if bool(lock.is_enabled_pullspring):
+            for entity_description in ENTITIES:
+                entities.append(
+                    TedeeButtonEntity(lock, coordinator, entity_description)
+                )
+
+    async_add_entities(entities)
+
+
+class TedeeButtonEntity(TedeeEntity, ButtonEntity):
+    """Button to only pull the spring (does not unlock if locked)."""
+
+    entity_description: TedeeButtonEntityDescription
+
+    async def async_press(self, **kwargs: Any) -> None:
+        """Press the button."""
+        try:
+            self._lock.state = TedeeLockState.UNLOCKING
+            self.async_write_ha_state()
+            await self.entity_description.press_fn(
+                self.coordinator.tedee_client, self._lock.lock_id
+            )
+            await self.coordinator.async_request_refresh()
+        except (TedeeClientException, Exception) as ex:
+            raise HomeAssistantError(
+                "Error while unlatching the lock {} through button: {}".format(
+                    str(self._lock.lock_id), ex
+                )
+            ) from ex

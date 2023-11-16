@@ -1,118 +1,191 @@
-import logging
-from pytedee_async import TedeeClientException, TedeeAuthException, TedeeConnectionException
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ID, ATTR_BATTERY_CHARGING
+"""Tedee lock entities."""
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
+
+from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
+
+from homeassistant.components.lock import (
+    LockEntity,
+    LockEntityDescription,
+    LockEntityFeature,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, CLIENT
+from .const import (
+    ATTR_CONNECTED,
+    ATTR_DURATION_PULLSPRING,
+    ATTR_NUMERIC_STATE,
+    ATTR_SEMI_LOCKED,
+    ATTR_SUPPORT_PULLSPING,
+    CONF_UNLOCK_PULLS_LATCH,
+    DOMAIN,
+)
+from .coordinator import TedeeApiCoordinator
+from .entity import TedeeEntity, TedeeEntityDescription
 
 
-ATTR_NUMERIC_STATE = "numeric_state"
-ATTR_SUPPORT_PULLSPING = "support_pullspring"
-ATTR_DURATION_PULLSPRING = "duration_pullspring"
-ATTR_CONNECTED = "connected"
+@dataclass
+class TedeeLockEntityDescriptionMixin:
+    """Extends Tedee lock entity description."""
 
-_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    
-    tedee_client = hass.data[DOMAIN][CLIENT]
-    async_add_entities(
-        [TedeeLock(lock, tedee_client) for lock in tedee_client.locks], True
-    )
+@dataclass
+class TedeeLockEntityDescription(
+    LockEntityDescription, TedeeEntityDescription, TedeeLockEntityDescriptionMixin
+):
+    """Describes Tedee lock entity."""
 
-class TedeeLock(LockEntity):
 
-    def __init__(self, lock, client):
-        _LOGGER.debug("LockEntity: %s", lock.name)
-        
-        self._lock = lock
-        self._client = client
-        self._id = self._lock.id
+ENTITIES: tuple[TedeeLockEntityDescription, ...] = (
+    TedeeLockEntityDescription(
+        unique_id_fn=lambda lock: f"{lock.lock_id}-lock",
+        key="lock",
+        translation_key="lock",
+        icon="mdi:lock",
+    ),
+)
 
-        self._attr_has_entity_name = True
-        self._attr_name = "Lock"
-        self._attr_unique_id = f"{lock.id}-lock"
-        
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._lock.id)},
-            name=self._lock.name,
-            manufacturer="Tedee",
-            model=self._lock.type
-        )
 
-    @property
-    def supported_features(self):
-        return SUPPORT_OPEN
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Tedee lock entity."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    @property
-    def available(self) -> bool:
-        return self._available
+    entities: list[TedeeLockEntity] = []
+    for lock in coordinator.data.values():
+        for entity_description in ENTITIES:
+            if lock.is_enabled_pullspring:
+                entities.append(
+                    TedeeLockWithLatchEntity(
+                        lock, coordinator, entity_description, entry
+                    )
+                )
+            else:
+                entities.append(
+                    TedeeLockEntity(lock, coordinator, entity_description, entry)
+                )
+
+    async_add_entities(entities)
+
+
+class TedeeLockEntity(TedeeEntity, LockEntity):
+    """A tedee lock that doesn't have pullspring enabled."""
+
+    entity_description: TedeeLockEntityDescription
+
+    def __init__(
+        self,
+        lock: TedeeLock,
+        coordinator: TedeeApiCoordinator,
+        entity_description: TedeeLockEntityDescription,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the lock."""
+        super().__init__(lock, coordinator, entity_description)
+        self._unlock_pulls_latch = entry.data.get(CONF_UNLOCK_PULLS_LATCH, False)
 
     @property
     def is_locked(self) -> bool:
-        return self._state == 6
+        """Return true if lock is locked."""
+        return self._lock.state == TedeeLockState.LOCKED
 
     @property
     def is_unlocking(self) -> bool:
-        return self._state == 4
+        """Return true if lock is unlocking."""
+        return self._lock.state == TedeeLockState.UNLOCKING
 
     @property
     def is_locking(self) -> bool:
-        return self._state == 5
-    
-    @property
-    def is_jammed(self) -> bool:
-        return self._state == 3
+        """Return true if lock is locking."""
+        return self._lock.state == TedeeLockState.LOCKING
 
     @property
-    def extra_state_attributes(self):
-        return {
-            ATTR_ID: self._id,
-            ATTR_BATTERY_LEVEL: self._lock.battery_level,
-            ATTR_BATTERY_CHARGING: self._lock.is_charging,
+    def is_jammed(self) -> bool:
+        """Return true if lock is jammed."""
+        return self._lock.is_state_jammed
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Extra attributes for the lock."""
+        attributes = {
+            ATTR_ID: self._lock.lock_id,
             ATTR_NUMERIC_STATE: self._lock.state,
             ATTR_CONNECTED: self._lock.is_connected,
             ATTR_SUPPORT_PULLSPING: self._lock.is_enabled_pullspring,
-            ATTR_DURATION_PULLSPRING: self._lock.duration_pullspring,
+            ATTR_SEMI_LOCKED: self._lock.state == TedeeLockState.HALF_OPEN,
+        }
+        if self._lock.lock_type == "Tedee PRO":  # only pro has rechargeable battery
+            attributes |= {ATTR_BATTERY_CHARGING: self._lock.is_charging}
+
+        return attributes
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._lock.is_connected
+
+    async def async_unlock(self, **kwargs: Any) -> None:
+        """Unlock the door."""
+        try:
+            self._lock.state = TedeeLockState.UNLOCKING
+            self.async_write_ha_state()
+
+            if self._unlock_pulls_latch:
+                await self.coordinator.tedee_client.open(self._lock.lock_id)
+            else:
+                await self.coordinator.tedee_client.unlock(self._lock.lock_id)
+            await self.coordinator.async_request_refresh()
+        except (TedeeClientException, Exception) as ex:
+            raise HomeAssistantError(
+                "Failed to unlock the door. Lock %s" % self._lock.lock_id
+            ) from ex
+
+    async def async_lock(self, **kwargs: Any) -> None:
+        """Lock the door."""
+        try:
+            self._lock.state = TedeeLockState.LOCKING
+            self.async_write_ha_state()
+
+            await self.coordinator.tedee_client.lock(self._lock.lock_id)
+            await self.coordinator.async_request_refresh()
+        except (TedeeClientException, Exception) as ex:
+            raise HomeAssistantError(
+                "Failed to lock the door. Lock %s" % self._lock.lock_id
+            ) from ex
+
+
+class TedeeLockWithLatchEntity(TedeeLockEntity):
+    """A tedee lock but has pullspring enabled, so it additional features."""
+
+    @property
+    def supported_features(self) -> LockEntityFeature:
+        """Flag supported features."""
+        return LockEntityFeature.OPEN
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Extra attributes for the lock."""
+        return super().extra_state_attributes | {
+            ATTR_DURATION_PULLSPRING: self._lock.duration_pullspring
         }
 
-    async def async_update(self):
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open the door with pullspring."""
         try:
-            self._available = await self._client.update(self._id)
-        except TedeeAuthException as ex:
-            msg = "Credentials invalid. Probably your token expired. Update in integration settings."
-            _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
-        except TedeeConnectionException as ex:
-            msg = "Problem while establish connection to the API. Maybe you're offline. Try again later."
-            _LOGGER.warn(msg)
-            raise HomeAssistantError(msg)
-        except TedeeClientException as ex:
-            msg = f"Internal error occured with Tedee integration, please report to developers. Original Error: {msg}"
-            _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            self._lock.state = TedeeLockState.UNLOCKING
+            self.async_write_ha_state()
 
-        self._lock = self._client.find_lock(self._id)
-        self._id = self._lock.id
-        self._state = self._lock.state
-
-        
-    async def async_unlock(self, **kwargs):
-        try:
-            await self._client.unlock(self._id)
-        except TedeeClientException:
-            _LOGGER.debug("Failed to unlock the door.")
-
-    async def async_lock(self, **kwargs):
-        try:
-            await self._client.lock(self._id)
-        except TedeeClientException:
-            _LOGGER.debug("Failed to lock the door.")
-
-    async def async_open(self, **kwargs):
-        try:
-            await self._client.open(self._id)
-        except TedeeClientException:
-            _LOGGER.debug("Failed to unlatch the door.")        
+            await self.coordinator.tedee_client.open(self._lock.lock_id)
+            await self.coordinator.async_request_refresh()
+        except (TedeeClientException, Exception) as ex:
+            raise HomeAssistantError(
+                "Failed to unlatch the door. Lock %s" % self._lock.lock_id
+            ) from ex

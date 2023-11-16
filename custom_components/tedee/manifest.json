@@ -1,12 +1,12 @@
 {
   "domain": "tedee",
   "name": "Tedee",
-  "documentation": "https://github.com/patrickhilker/tedee_hass_integration",
-  "issue_tracker": "https://github.com/patrickhilker/tedee_hass_integration/issues",
-  "dependencies": [],
-  "codeowners": ["@patrickhilker"],
-  "requirements": ["pytedee-async>=0.0.10"],
-  "version": "2023.6.1",
+  "codeowners": ["@patrickhilker", "@joerg65", "@zweckj"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "dependencies": ["http"],
+  "documentation": "https://github.com/patrickhilker/tedee_hass_integration",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/patrickhilker/tedee_hass_integration/issues",
+  "requirements": ["pytedee-async==0.2.1"],
+  "version": "2023.11.0"
 }

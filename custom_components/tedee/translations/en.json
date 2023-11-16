@@ -1,26 +1,85 @@
 {
     "config": {
-        "title": "tedee",
-        "step": {
-            "user": {
-                "title": "Setup your tedee",
-                "description": "[How to create Personal Access Token](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Operate - Lock  \n- Devices - Read",
-                "data": {
-                    "access_token": "Personal Access Key"
-                }
-            }
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "auth": "Something went wrong."
+            "bridge_not_found": "No bridge found in cloud which matches the configured local bridge. Maybe you're using the wrong account?",
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "invalid_host": "Invalid hostname or IP address"
+        },
+        "step": {
+            "configure_cloud": {
+                "data": {
+                    "access_token": "Personal Access Key"
+                },
+                "description": "Enable fallback to cloud, in case local connection fails. [How to create Personal Access Token](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Operate - Lock  \n- Devices - Read",
+                "title": "Configure Cloud API"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Personal Access Key (optional)",
+                    "local_access_token": "Local Access Token (optional)"
+                },
+                "description": "tedee needs an updated access key, because the existing one is invalid or might have expired.",
+                "title": "Update of Access Keys required"
+            },
+            "select_bridge": {
+                "data": {
+                    "bridge_id": "Bridge"
+                },
+                "description": "Select the bridge you want to add to Home Assistant.",
+                "title": "Select your bridge"
+            },
+            "user": {
+                "data": {
+                    "home_assistant_access_token": "Home Assistant Long Lived Access Token (optional)",
+                    "host": "Bridge IP Address (optional)",
+                    "local_access_token": "Local Access Token (optional)",
+                    "use_cloud": "Additonally use Cloud API?"
+                },
+                "data_description": {
+                    "home_assistant_access_token": "Used to allow bridge to push data to Home Assistant. You can find it in the Home Assistant UI under \"Profile\" -> \"Long-Lived Access Tokens\".",
+                    "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
+                },
+                "description": "If you need help finding those settings check the [documentation](https://github.com/patrickhilker/tedee_hass_integration#Setup).",
+                "title": "Setup your tedee locks"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "unlatch": {
+                "name": "Pull latch"
+            },
+            "unlock_unlatch": {
+                "name": "Unlock and pull latch"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Lock"
+            }
+        },
+        "sensor": {
+            "battery_sensor": {
+                "name": "Battery"
+            }
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Update Configuration",
                 "data": {
-                    "access_token": "Personal Access Key"
-                }
+                    "access_token": "Personal Access Key",
+                    "home_assistant_access_token": "Home Assistant Long Lived Access Token",
+                    "host": "Bridge IP Address",
+                    "local_access_token": "Local Access Token",
+                    "unlock_pulls_latch": "Unlock also pulls latch"
+                },
+                "title": "Update Configuration"
             }
         }
     }

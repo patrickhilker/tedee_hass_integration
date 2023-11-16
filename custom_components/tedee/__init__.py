@@ -1,70 +1,83 @@
+"""Init the tedee component."""
 import logging
 
-from homeassistant.core import HomeAssistant
+from pytedee_async import TedeeAuthException, TedeeClientException
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from pytedee_async import TedeeClient, TedeeClientException, TedeeAuthException, TedeeConnectionException
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, CLIENT
+from .const import CONF_HOME_ASSISTANT_ACCESS_TOKEN, DOMAIN
+from .coordinator import TedeeApiCoordinator
+from .views import TedeeWebhookView
 
-PLATFORMS = ["lock", "sensor", "button"]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LOCK,
+    Platform.SENSOR,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup(hass, config):
-    logging.debug("Setting up Tedee integration...")
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Integration setup"""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Integration setup."""
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
-    pak = entry.data.get(CONF_ACCESS_TOKEN)
+    hass.data.setdefault(DOMAIN, {})[
+        entry.entry_id
+    ] = coordinator = TedeeApiCoordinator(hass, entry)
 
-    try:
-        tedee_client = await TedeeClient.create(pak)
-    except TedeeAuthException as ex:
-        _LOGGER.error(f"Authentication failed. \
-                        Personal Key is either invalid, doesn't have the correct scopes \
-                        (Devices: Read, Locks: Operate) or is expired."
-                        )
-        return False
-        # TODO: raise ConfigEntryAuthFailed(...) from ex
-        # TODO: implement handler in config_flow 
-    except (TedeeClientException, TedeeConnectionException, Exception) as ex:
-        _LOGGER.error(ex)
-        raise ConfigEntryNotReady(f"Tedee failed to setup. Error: {ex}.") from ex
+    await coordinator.async_config_entry_first_refresh()
 
-    _LOGGER.debug("available_locks: %s", tedee_client.locks)
+    home_assistant_token = entry.data.get(CONF_HOME_ASSISTANT_ACCESS_TOKEN, "")
+    # Setup webhook if long lived access token
+    if home_assistant_token != "":
+        try:
+            instance_url = get_url(hass)
+            _LOGGER.debug("Registering webhook at %s/api/tedee/webhook", instance_url)
+            hass.http.register_view(TedeeWebhookView(coordinator))
+            headers: list[dict[str, str]] = [
+                {"Authorization": f"Bearer {home_assistant_token}"}
+            ]
+            await coordinator.tedee_client.register_webhook(
+                instance_url + "/api/tedee/webhook", headers
+            )
 
-    if not tedee_client.locks:
-        # No locks found; abort setup routine.
-        _LOGGER.warn("No locks found in your account")
-        return False
-    
-    hass.data[DOMAIN][CLIENT] = tedee_client
+        except NoURLAvailableError:
+            _LOGGER.warning(
+                "Could not register webhook, because no URL of Home Assistant could be found"
+            )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        
+
     return True
 
 
-async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # services = list(hass.services.async_services().get(DOMAIN).keys())
-    # [hass.services.async_remove(DOMAIN, service) for service in services]
+
+    # cleanup webhooks
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    try:
+        await coordinator.tedee_client.delete_webhooks()
+    except (TedeeClientException, TedeeAuthException) as ex:
+        _LOGGER.warning("Error while deleting webhooks: %s", ex)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data[DOMAIN].pop(CLIENT)
+        hass.data[DOMAIN].pop(entry.entry_id)
         hass.data[DOMAIN] = {}
 
     return unload_ok
