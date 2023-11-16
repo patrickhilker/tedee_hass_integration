@@ -42,9 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             instance_url = get_url(hass)
             _LOGGER.debug("Registering webhook at %s/api/tedee/webhook", instance_url)
             hass.http.register_view(TedeeWebhookView(coordinator))
-            headers: list[dict[str, str]] = [
-                {"Authorization": f"Bearer {home_assistant_token}"}
-            ]
+            headers: list[dict[str, str]] = []  # [
+            #     {"Authorization": f"Bearer {home_assistant_token}"}
+            # ]
             await coordinator.tedee_client.register_webhook(
                 instance_url + "/api/tedee/webhook", headers
             )

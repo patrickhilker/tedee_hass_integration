@@ -18,7 +18,7 @@ class TedeeWebhookView(HomeAssistantView):
     url = "/api/tedee/webhook"
     name = "api:tedee:webhook"
 
-    requires_auth = True
+    requires_auth = False  # True
 
     def __init__(self, coordinator: TedeeApiCoordinator) -> None:
         """Initialize the view."""
