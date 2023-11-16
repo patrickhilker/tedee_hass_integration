@@ -1,1 +1,5 @@
 .venv/*
+.psvenv/*
+tests/__pycache__/*
+custom_components/__pycache__/*
+custom_components/tedee/__pycache__/*
