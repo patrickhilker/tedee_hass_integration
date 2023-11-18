@@ -1,4 +1,6 @@
 """Config flow for Tedee integration."""
+import logging
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -33,6 +35,7 @@ from .const import (
     NAME,
 )
 
+_LOGGER = logging.getLogger(__name__)
 
 async def validate_input(user_input: dict[str, Any]) -> bool:
     """Validate the user input allows us to connect."""
@@ -44,8 +47,10 @@ async def validate_input(user_input: dict[str, Any]) -> bool:
     try:
         await tedee_client.get_locks()
     except (TedeeAuthException, TedeeLocalAuthException) as ex:
+        _LOGGER.exception("Exception in validating input %s", ex)
         raise InvalidAuth from ex
     except (TedeeClientException, Exception) as ex:
+        _LOGGER.exception("Exception in validating input %s", ex)
         raise CannotConnect from ex
     return True
 
@@ -56,6 +61,7 @@ async def get_local_bridge(host: str, local_access_token: str) -> TedeeBridge:
     try:
         return await tedee_client.get_local_bridge()
     except (TedeeClientException, Exception) as ex:
+        _LOGGER.exception("Exception in validating input %s", ex)
         raise CannotConnect from ex
 
 
