@@ -37,6 +37,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def validate_input(user_input: dict[str, Any]) -> bool:
     """Validate the user input allows us to connect."""
     pak = user_input.get(CONF_ACCESS_TOKEN, "")
@@ -347,41 +348,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options for the custom component."""
         errors: dict[str, str] = {}
-
         if user_input is not None:
-            if user_input.get(CONF_HOST) and not user_input.get(
-                CONF_LOCAL_ACCESS_TOKEN
-            ):
-                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
-            elif not user_input.get(CONF_HOST) and user_input.get(
-                CONF_LOCAL_ACCESS_TOKEN
-            ):
-                errors[CONF_HOST] = "invalid_host"
-            elif user_input.get(CONF_HOST) and user_input.get(CONF_LOCAL_ACCESS_TOKEN):
-                try:
-                    await validate_input(
-                        {
-                            CONF_HOST: user_input.get(CONF_HOST),
-                            CONF_LOCAL_ACCESS_TOKEN: user_input.get(
-                                CONF_LOCAL_ACCESS_TOKEN
-                            ),
-                        }
-                    )
-                except InvalidAuth:
-                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
-                except CannotConnect:
-                    errors[CONF_HOST] = "invalid_host"
-
-            if user_input.get(CONF_ACCESS_TOKEN):
-                try:
-                    await validate_input(
-                        {CONF_ACCESS_TOKEN: user_input.get(CONF_ACCESS_TOKEN)}
-                    )
-                except InvalidAuth:
-                    errors[CONF_ACCESS_TOKEN] = "invalid_api_key"
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-
             if not errors:
                 # write entry to config and not options dict, pass empty options out
                 self.hass.config_entries.async_update_entry(
@@ -394,28 +361,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         options_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_ACCESS_TOKEN,
-                    default=self.config_entry.data.get(CONF_ACCESS_TOKEN, ""),
-                ): str,
-                vol.Optional(
                     CONF_UNLOCK_PULLS_LATCH,
                     default=self.config_entry.options.get(
                         CONF_UNLOCK_PULLS_LATCH, False
                     ),
                 ): bool,
-                vol.Optional(
-                    CONF_HOST, default=self.config_entry.data.get(CONF_HOST, "")
-                ): str,
-                vol.Optional(
-                    CONF_LOCAL_ACCESS_TOKEN,
-                    default=self.config_entry.data.get(CONF_LOCAL_ACCESS_TOKEN, ""),
-                ): str,
-                vol.Optional(
-                    CONF_HOME_ASSISTANT_ACCESS_TOKEN,
-                    default=self.config_entry.data.get(
-                        CONF_HOME_ASSISTANT_ACCESS_TOKEN, ""
-                    ),
-                ): str,
             }
         )
 
