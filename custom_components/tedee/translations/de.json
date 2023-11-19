@@ -41,10 +41,7 @@
             "init": {
                 "title": "Konfiguration aktualisieren",
                 "data": {
-                    "access_token": "Personal Access Key",
-                    "unlock_pulls_latch": "Entsperren des Schlosses zieht die Falle",
-                    "host": "IP Adresse der Bridge",
-                    "local_access_token": "Lokaler Access Token"
+                    "unlock_pulls_latch": "Entsperren des Schlosses zieht die Falle"
                 }
             }
         }

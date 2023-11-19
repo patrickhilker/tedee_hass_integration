@@ -29,7 +29,6 @@
             "init": {
                 "title": "Actualizar Configuración",
                 "data": {
-                    "access_token": "Clave de Acceso Personal",
                     "unlock_pulls_latch": "Desbloquear también acciona el cerrojo"
                 }
             }

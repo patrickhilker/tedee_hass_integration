@@ -73,10 +73,6 @@
         "step": {
             "init": {
                 "data": {
-                    "access_token": "Personal Access Key",
-                    "home_assistant_access_token": "Home Assistant Long Lived Access Token",
-                    "host": "Bridge IP Address",
-                    "local_access_token": "Local Access Token",
                     "unlock_pulls_latch": "Unlock also pulls latch"
                 },
                 "title": "Update Configuration"
