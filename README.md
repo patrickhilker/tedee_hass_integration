@@ -9,14 +9,14 @@ Integrate your [tedee smart lock](https://tedee.com/product-info/lock/) into [Ho
 
 This component gives Home Assistant control of your tedee smart lock. It supports to lock and unlock your tedee lock and pull the spring (if available). Also, it gets some additional data as attributes (battery level, charging, connected, infos about pullspring), a battery sensor and buttons triggering unlocking & unlatching. Both tedee PRO and GO are supported.
 
-> **Note**
+> [!IMPORTANT]
 > To use the integration you need the [tedee bridge](https://tedee.com/product-info/bridge/) connected to your lock.
 
 ## Installation
 
 This custom component can be installed using [HACS](https://hacs.xyz/).
 
-> **Warning**
+> [!WARNING]
 >  If you are a former user of [joerg65/tedee_lock](https://github.com/joerg65/tedee_lock), please uninstall it by deleting `/config/custom_components/tedee_lock` and remove the configuration from your `configuration.yaml`. You can reuse the personal access key, so you might keep it.
 
 ## Setup
