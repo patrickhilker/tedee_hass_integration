@@ -1,4 +1,6 @@
-# 🤖🔒 tedee Custom Component
+# 🤖🔒 tedee (cloud)
+> [!NOTE]
+> Starting with release 2024.2.0 a tedee integration will be shipped as part of HomeAssistant. However, the included component is local API only, if you need the cloud API, you can still use this custom component.
 
 Integrate your [tedee smart lock](https://tedee.com/product-info/lock/) into [Home Assistant](https://www.home-assistant.io/).
 
