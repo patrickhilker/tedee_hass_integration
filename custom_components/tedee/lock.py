@@ -1,6 +1,6 @@
 import logging
 
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.const import (ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
                                  ATTR_ID)
 from homeassistant.core import callback
@@ -127,7 +127,7 @@ class TedeeLockWithLatch(TedeeLock):
 
     @property
     def supported_features(self):
-        return SUPPORT_OPEN
+        return LockEntityFeature.OPEN
 
 
     async def async_unlock(self, **kwargs):
